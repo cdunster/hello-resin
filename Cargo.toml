@@ -1,0 +1,6 @@
+[package]
+name = "hello-resin"
+version = "0.1.0"
+authors = ["Callum Dunster <calonthexbox@hotmail.com>"]
+
+[dependencies]
