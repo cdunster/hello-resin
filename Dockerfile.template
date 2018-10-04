@@ -70,7 +70,7 @@ COPY --from=dependencies /build/app/target /build/app/target
 
 # Build real app
 WORKDIR /build/app
-RUN rm -rf target/release/hello*
+RUN rm -rf target/release/hello-resin
 RUN cargo build --release
 
 ################################################################################
@@ -81,11 +81,11 @@ FROM base
 
 # Copy binary from builder image
 WORKDIR /app
-COPY --from=builder /build/app/target/release/hello .
+COPY --from=builder /build/app/target/release/hello-resin .
 
 # Copy other folders required by the application. Example:
 #
 # COPY --from=builder /build/app/assets ./assets
 
 # Launch application
-CMD ["/app/hello", "%%RESIN_MACHINE_NAME%%"]
+CMD ["/app/hello-resin", "%%RESIN_MACHINE_NAME%%"]
