@@ -28,9 +28,6 @@ RUN cp `which uname` /bin/uname-orig && echo '#!/bin/bash\nif [[ $1 == "-m" ]]; 
 # Install specific version of Rust (see ARG)
 RUN curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- -y
 
-# Set Rust version to nightly for Rocket.
-RUN rustup default nightly-2018-09-25
-
 ################################################################################
 # Dependencies
 ################################################################################
@@ -40,8 +37,9 @@ FROM rust as dependencies
 # Required by `cargo new app`
 ENV USER=root
 
-# Create new fake project
+# Create new fake project and set Rust version to nightly for Rocket.
 WORKDIR /build
+RUN rustup default nightly-2018-09-25
 RUN cargo new app
 
 # Copy real app dependencies
