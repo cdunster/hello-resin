@@ -1,3 +1,13 @@
+#![feature(plugin, decl_macro, proc_macro_non_items)]
+#![plugin(rocket_codegen)]
+
+#[macro_use] extern crate rocket;
+
+#[get("/")]
+fn hello() -> &'static str {
+    "Hello, world!\nThis page is brought to you from my RPi3."
+}
+
 fn main() {
-    println!("Hello, resin!");
+    rocket::ignite().mount("/", routes![hello]).launch();
 }
