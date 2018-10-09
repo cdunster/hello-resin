@@ -1,5 +1,5 @@
 ################################################################################
-# Base image
+# Resin Base Image
 ################################################################################
 
 FROM resin/%%RESIN_MACHINE_NAME%%-debian as base
@@ -8,17 +8,17 @@ ENV INITSYSTEM=on
 ENV DEBIAN_FRONTEND=noninteractive
 
 ################################################################################
-# Rust image
+# Rust Image
 ################################################################################
 
 FROM base as rust
 
-# Install build tools
+# Install build tools.
 RUN apt-get -q update && apt-get install -yq --no-install-recommends build-essential curl file
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-# Install specific version of Rust (see ARG)
+# Install specific version of Rust.
 RUN curl -0 https://sh.rustup.rs -o rustup-init
 RUN chmod +x rustup-init
 RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
@@ -67,7 +67,7 @@ RUN rm -rf target/release/hello-resin
 RUN cargo build --release
 
 ################################################################################
-# Final image
+# Project Image
 ################################################################################
 
 FROM base
