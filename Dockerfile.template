@@ -44,5 +44,8 @@ FROM base
 WORKDIR /app
 COPY --from=builder /build/target/release/hello-resin .
 
+# Copy Rocket.toml settings file.
+COPY Rocket.toml .
+
 # Launch application
-CMD "/app/hello-resin"
+CMD "./hello-resin"
