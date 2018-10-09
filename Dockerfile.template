@@ -24,47 +24,15 @@ RUN chmod +x rustup-init
 RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
 
 ################################################################################
-# Dependencies
-################################################################################
-
-FROM rust as dependencies
-
-# Required by `cargo new app`
-ENV USER=root
-
-# Create new fake project
-WORKDIR /build
-RUN cargo new app
-
-# Set Rust version to nightly for Rocket.
-RUN rustup default nightly-2018-09-25
-
-# Copy real app dependencies
-COPY Cargo.* /build/app/
-
-# Build fake project with real dependencies
-WORKDIR /build/app
-RUN cargo build --release
-
-################################################################################
 # Builder
 ################################################################################
 
 FROM rust as builder
 
-# We do not want to download deps, update registry, ... again
-COPY --from=dependencies /root/.cargo /root/.cargo
+COPY . /build
+WORKDIR /build
 
-# Copy everything, not just source code
-COPY . /build/app
-
-# Update already built deps from dependencies image
-COPY --from=dependencies /build/app/target /build/app/target
-
-# Build real app
-WORKDIR /build/app
-RUN rm -rf target/release/hello-resin
-RUN cargo build --release
+RUN cargo build
 
 ################################################################################
 # Project Image
@@ -74,7 +42,7 @@ FROM base
 
 # Copy binary from builder image
 WORKDIR /app
-COPY --from=builder /build/app/target/release/hello-resin .
+COPY --from=builder /build/target/debug/hello-resin .
 
 # Copy other folders required by the application. Example:
 #
