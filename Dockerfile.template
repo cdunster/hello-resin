@@ -32,7 +32,7 @@ FROM rust as builder
 COPY . /build
 WORKDIR /build
 
-RUN cargo build
+RUN cargo build --release
 
 ################################################################################
 # Project Image
@@ -42,11 +42,7 @@ FROM base
 
 # Copy binary from builder image
 WORKDIR /app
-COPY --from=builder /build/target/debug/hello-resin .
-
-# Copy other folders required by the application. Example:
-#
-# COPY --from=builder /build/app/assets ./assets
+COPY --from=builder /build/target/release/hello-resin .
 
 # Launch application
 CMD "/app/hello-resin"
