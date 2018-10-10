@@ -29,13 +29,11 @@ RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
 
 FROM rust AS dependencies
 
-WORKDIR /build
-
 # Create new, empty project.
-RUN USER=root cargo new dep-project
-WORKDIR /build/dep-project
+RUN USER=root cargo new app
+WORKDIR /app
 
-# Copy Cargo files that contain the dependencies.
+# Copy actual Cargo files that contain the dependencies.
 COPY Cargo.* .
 
 # Build empty project with real dependencies.
@@ -45,16 +43,10 @@ RUN cargo build --release
 # Builder
 ################################################################################
 
-FROM rust AS builder
+FROM dependencies AS builder
 
-# Copy cargo registry containing dependencies.
-COPY --from=dependencies /root/.cargo /root/.cargo
-
-COPY . /build
-WORKDIR /build
-
-# Copy target folder with dependencies from dependencies image.
-COPY --from=dependencies /build/dep-project/target .
+WORKDIR /app
+COPY . .
 
 RUN cargo build --release
 
@@ -66,7 +58,7 @@ FROM base
 
 # Copy binary from builder image
 WORKDIR /app
-COPY --from=builder /build/target/release/hello-resin .
+COPY --from=builder /app/target/release/hello-resin .
 
 # Copy Rocket.toml settings file.
 COPY Rocket.toml .
