@@ -24,6 +24,24 @@ RUN chmod +x rustup-init
 RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
 
 ################################################################################
+# Dependencies
+################################################################################
+
+FROM rust AS dependencies
+
+WORKDIR /build
+
+# Create new, empty project.
+RUN USER=root cargo new dep-project
+WORKDIR /build/dep-project
+
+# Copy Cargo files that contain the dependencies.
+COPY Cargo.* .
+
+# Build empty project with real dependencies.
+RUN cargo build --release
+
+################################################################################
 # Builder
 ################################################################################
 
@@ -31,6 +49,9 @@ FROM rust AS builder
 
 COPY . /build
 WORKDIR /build
+
+# Copy target folder with dependencies from dependencies image.
+COPY --from=dependencies target .
 
 RUN cargo build --release
 
