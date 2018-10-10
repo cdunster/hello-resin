@@ -56,12 +56,13 @@ RUN cargo build --release
 
 FROM base
 
-# Copy binary from builder image
 WORKDIR /app
-COPY --from=builder /app/target/release/hello-resin .
 
 # Copy Rocket.toml settings file.
 COPY Rocket.toml .
+
+# Copy binary from builder image
+COPY --from=builder /app/target/release/hello-resin .
 
 # Launch application
 CMD "./hello-resin"
