@@ -47,6 +47,9 @@ RUN cargo build --release
 
 FROM rust AS builder
 
+# Copy cargo registry containing dependencies.
+COPY --from=dependencies /root/.cargo /root/.cargo
+
 COPY . /build
 WORKDIR /build
 
