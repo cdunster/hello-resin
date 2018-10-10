@@ -51,7 +51,7 @@ COPY . /build
 WORKDIR /build
 
 # Copy target folder with dependencies from dependencies image.
-COPY --from=dependencies target .
+COPY --from=dependencies /build/dep-project/target .
 
 RUN cargo build --release
 
