@@ -2,7 +2,7 @@
 # Resin Base Image
 ################################################################################
 
-FROM resin/%%RESIN_MACHINE_NAME%%-debian as base
+FROM resin/%%RESIN_MACHINE_NAME%%-debian AS base
 
 ENV INITSYSTEM=on
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Rust Image
 ################################################################################
 
-FROM base as rust
+FROM base AS rust
 
 # Install build tools.
 RUN apt-get -q update && apt-get install -yq --no-install-recommends build-essential curl file
@@ -27,7 +27,7 @@ RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
 # Builder
 ################################################################################
 
-FROM rust as builder
+FROM rust AS builder
 
 COPY . /build
 WORKDIR /build
