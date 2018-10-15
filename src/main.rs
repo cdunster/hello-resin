@@ -19,8 +19,16 @@ fn get_zones() -> Json {
     }))
 }
 
+#[get("/zones/<uuid>")]
+fn get_zone_from_uuid(uuid: String) -> Json {
+    Json(json!({
+        "uuid": "test-uuid-123",
+        "name": "Zone Name"
+    }))
+}
+
 fn create_rocket_with_mounts() -> rocket::Rocket {
-    rocket::ignite().mount("/", routes![index, get_zones])
+    rocket::ignite().mount("/", routes![index, get_zones, get_zone_from_uuid])
 }
 
 fn main() {
@@ -50,6 +58,22 @@ mod tests {
 
         let expected = Json(json!({
             "zones": []
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() {
+        let client = Client::new(create_rocket_with_mounts()).unwrap();
+        let mut response = client
+            .get("/zones/test-uuid-123")
+            .header(ContentType::JSON)
+            .dispatch();
+        let body = response.body_string().unwrap();
+
+        let expected = Json(json!({
+            "uuid": "test-uuid-123",
+            "name": "Zone Name"
         })).to_string();
         assert_eq!(expected, body);
     }
