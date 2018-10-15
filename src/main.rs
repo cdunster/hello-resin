@@ -62,14 +62,18 @@ mod tests {
         assert_eq!(expected, body);
     }
 
+    fn get_zone_return_response_body_string(client: &Client, zone_uuid: &str) -> String {
+        let mut response = client
+            .get(format!("/zones/{}", zone_uuid))
+            .header(ContentType::JSON)
+            .dispatch();
+        response.body_string().unwrap()
+    }
+
     #[test]
     fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() {
         let client = Client::new(create_rocket_with_mounts()).unwrap();
-        let mut response = client
-            .get("/zones/test-uuid-123")
-            .header(ContentType::JSON)
-            .dispatch();
-        let body = response.body_string().unwrap();
+        let body = get_zone_return_response_body_string(&client, "test-uuid-123");
 
         let expected = Json(json!({
             "uuid": "test-uuid-123",
