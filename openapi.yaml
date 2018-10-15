@@ -18,6 +18,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/Zones"
 
+  /zones/{zoneUuid}:
+    get:
+      tags:
+        - Zones
+      summary: Get the details of the specified zone.
+      parameters:
+        - name: zoneUuid
+          in: path
+          description: The unique identifier of the desired zone.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK - Body contains Zone object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+
 components:
   schemas:
     Zone:
