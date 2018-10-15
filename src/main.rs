@@ -23,7 +23,6 @@ fn get_zones() -> Json {
 fn get_zone_from_uuid(uuid: String) -> Json {
     Json(json!({
         "uuid": uuid,
-        "name": "Zone Name"
     }))
 }
 
@@ -77,7 +76,6 @@ mod tests {
 
         let expected = Json(json!({
             "uuid": "test-uuid-123",
-            "name": "Zone Name"
         })).to_string();
         assert_eq!(expected, body);
     }
@@ -91,7 +89,6 @@ mod tests {
 
         let expected = Json(json!({
             "uuid": zone_uuid,
-            "name": "Zone Name"
         })).to_string();
         assert_eq!(expected, body);
 
@@ -100,7 +97,6 @@ mod tests {
 
         let expected = Json(json!({
             "uuid": zone_uuid,
-            "name": "Zone Name"
         })).to_string();
         assert_eq!(expected, body);
     }
