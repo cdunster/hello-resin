@@ -26,7 +26,7 @@ fn get_zone_from_uuid(uuid: String) -> Option<Json> {
     if !ZONE_UUIDS.contains(&uuid.as_str()) {
         None
     } else {
-        Some(Json(json!({ "uuid": uuid })))
+        Some(Json(json!({})))
     }
 }
 
@@ -85,9 +85,7 @@ mod tests {
         let client = Client::new(create_rocket_with_mounts()).unwrap();
         let body = get_zone_return_response_body_string(&client, "test-uuid-123");
 
-        let expected = Json(json!({
-            "uuid": "test-uuid-123",
-        })).to_string();
+        let expected = Json(json!({})).to_string();
         assert_eq!(expected, body);
     }
 
@@ -98,17 +96,13 @@ mod tests {
         let zone_uuid = "test-uuid-123";
         let body = get_zone_return_response_body_string(&client, zone_uuid);
 
-        let expected = Json(json!({
-            "uuid": zone_uuid,
-        })).to_string();
+        let expected = Json(json!({})).to_string();
         assert_eq!(expected, body);
 
         let zone_uuid = "different-uuid-456";
         let body = get_zone_return_response_body_string(&client, zone_uuid);
 
-        let expected = Json(json!({
-            "uuid": zone_uuid,
-        })).to_string();
+        let expected = Json(json!({})).to_string();
         assert_eq!(expected, body);
     }
 
