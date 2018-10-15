@@ -22,7 +22,7 @@ fn get_zones() -> Json {
 #[get("/zones/<uuid>")]
 fn get_zone_from_uuid(uuid: String) -> Json {
     Json(json!({
-        "uuid": "test-uuid-123",
+        "uuid": uuid,
         "name": "Zone Name"
     }))
 }
@@ -77,6 +77,29 @@ mod tests {
 
         let expected = Json(json!({
             "uuid": "test-uuid-123",
+            "name": "Zone Name"
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn given_zones_when_get_zones_individually_then_return_correct_json_zone_object_each_time() {
+        let client = Client::new(create_rocket_with_mounts()).unwrap();
+
+        let zone_uuid = "test-uuid-123";
+        let body = get_zone_return_response_body_string(&client, zone_uuid);
+
+        let expected = Json(json!({
+            "uuid": zone_uuid,
+            "name": "Zone Name"
+        })).to_string();
+        assert_eq!(expected, body);
+
+        let zone_uuid = "different-uuid-456";
+        let body = get_zone_return_response_body_string(&client, zone_uuid);
+
+        let expected = Json(json!({
+            "uuid": zone_uuid,
             "name": "Zone Name"
         })).to_string();
         assert_eq!(expected, body);
