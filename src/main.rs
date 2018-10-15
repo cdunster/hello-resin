@@ -7,6 +7,8 @@ extern crate rocket_contrib;
 
 use rocket_contrib::Json;
 
+static ZONE_UUIDS: [&str; 2] = ["test-uuid-123", "different-uuid-456"];
+
 #[get("/")]
 fn index() -> &'static str {
     "Hello, World!"
@@ -20,10 +22,12 @@ fn get_zones() -> Json {
 }
 
 #[get("/zones/<uuid>")]
-fn get_zone_from_uuid(uuid: String) -> Json {
-    Json(json!({
-        "uuid": uuid,
-    }))
+fn get_zone_from_uuid(uuid: String) -> Option<Json> {
+    if !ZONE_UUIDS.contains(&uuid.as_str()) {
+        None
+    } else {
+        Some(Json(json!({ "uuid": uuid })))
+    }
 }
 
 fn create_rocket_with_mounts() -> rocket::Rocket {
@@ -37,8 +41,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rocket::http::ContentType;
-    use rocket::local::Client;
+    use rocket::http::{ContentType, Status};
+    use rocket::local::{Client, LocalResponse};
 
     #[test]
     fn get_index_returns_content() {
@@ -67,6 +71,13 @@ mod tests {
             .header(ContentType::JSON)
             .dispatch();
         response.body_string().unwrap()
+    }
+
+    fn get_zone_return_response<'c>(client: &'c Client, zone_uuid: &str) -> LocalResponse<'c> {
+        client
+            .get(format!("/zones/{}", zone_uuid))
+            .header(ContentType::JSON)
+            .dispatch()
     }
 
     #[test]
@@ -99,5 +110,15 @@ mod tests {
             "uuid": zone_uuid,
         })).to_string();
         assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn given_none_existing_uuid_when_get_zone_then_return_error_not_found() {
+        let client = Client::new(create_rocket_with_mounts()).unwrap();
+
+        let zone_uuid = "none-existing-uuid";
+        let response = get_zone_return_response(&client, zone_uuid);
+
+        assert_eq!(Status::NotFound, response.status());
     }
 }
