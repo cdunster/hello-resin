@@ -43,13 +43,6 @@ components:
   schemas:
     Zone:
       properties:
-        uuid:
-          type: string
-          format: uuid
-          readOnly: true
-          uniqueItems: true
-          description: Unique identifier for a Zone.
-          example: 7bd897d5-195c-4fc3-8d34-59d960d94a33
         name:
           type: string
           description: User-friendly name for the Zone.
@@ -63,4 +56,13 @@ components:
         zones:
           type: array
           items:
-            $ref: "#components/schemas/Zone"
+            properties:
+              uuid:
+                type: string
+                format: uuid
+                readOnly: true
+                uniqueItems: true
+                description: Unique identifier for a Zone.
+                example: 7bd897d5-195c-4fc3-8d34-59d960d94a33
+              zone:
+                $ref: "#components/schemas/Zone"
