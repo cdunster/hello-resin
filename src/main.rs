@@ -8,6 +8,7 @@ extern crate rocket_contrib;
 use rocket_contrib::Json;
 
 static ZONE_UUIDS: [&str; 2] = ["test-uuid-123", "different-uuid-456"];
+static ZONE_NAMES: [&str; 2] = ["Zone Name", "Different Name"];
 
 #[get("/")]
 fn index() -> &'static str {
@@ -23,10 +24,10 @@ fn get_zones() -> Json {
 
 #[get("/zones/<uuid>")]
 fn get_zone_from_uuid(uuid: String) -> Option<Json> {
-    if !ZONE_UUIDS.contains(&uuid.as_str()) {
-        None
+    if let Some(i) = ZONE_UUIDS.iter().position(|&zone_uuid| zone_uuid == uuid) {
+        Some(Json(json!({ "name": String::from(ZONE_NAMES[i]) })))
     } else {
-        Some(Json(json!({})))
+        None
     }
 }
 
@@ -83,9 +84,11 @@ mod tests {
     #[test]
     fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() {
         let client = Client::new(create_rocket_with_mounts()).unwrap();
-        let body = get_zone_return_response_body_string(&client, "test-uuid-123");
+        let zone_uuid = "test-uuid-123";
+        let zone_name = "Zone Name";
+        let body = get_zone_return_response_body_string(&client, zone_uuid);
 
-        let expected = Json(json!({})).to_string();
+        let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -94,15 +97,17 @@ mod tests {
         let client = Client::new(create_rocket_with_mounts()).unwrap();
 
         let zone_uuid = "test-uuid-123";
+        let zone_name = "Zone Name";
         let body = get_zone_return_response_body_string(&client, zone_uuid);
 
-        let expected = Json(json!({})).to_string();
+        let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
 
         let zone_uuid = "different-uuid-456";
+        let zone_name = "Different Name";
         let body = get_zone_return_response_body_string(&client, zone_uuid);
 
-        let expected = Json(json!({})).to_string();
+        let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
     }
 
