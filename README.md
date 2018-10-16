@@ -2,7 +2,6 @@
 Simple test project for use with resin.io
 
 # To-Do
-1. Add cargo test to the resin script (Dockerfile.template).
 1. Rename project.
 1. Add name to Zone.
 1. Add temperature to Zone.
