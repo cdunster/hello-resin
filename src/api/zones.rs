@@ -29,17 +29,17 @@ mod tests {
     use super::*;
     use rocket::http::{ContentType, Status};
     use rocket::local::{Client, LocalResponse};
-    use rocket::Rocket;
     use rocket_contrib::Json;
 
-    fn create_rocket_with_mounts() -> Rocket {
+    fn create_client_with_mounts() -> Client {
         let rocket = rocket::ignite();
-        mount(rocket)
+        let rocket = mount(rocket);
+        Client::new(rocket).unwrap()
     }
 
     #[test]
     fn given_no_zones_when_get_zones_then_return_json_object_with_empty_array() {
-        let client = Client::new(create_rocket_with_mounts()).unwrap();
+        let client = create_client_with_mounts();
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
 
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() {
-        let client = Client::new(create_rocket_with_mounts()).unwrap();
+        let client = create_client_with_mounts();
         let zone_uuid = "test-uuid-123";
         let zone_name = "Zone Name";
         let body = get_zone_return_response_body_string(&client, zone_uuid);
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn given_zones_when_get_zones_individually_then_return_correct_json_zone_object_each_time() {
-        let client = Client::new(create_rocket_with_mounts()).unwrap();
+        let client = create_client_with_mounts();
 
         let zone_uuid = "test-uuid-123";
         let zone_name = "Zone Name";
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn given_none_existing_uuid_when_get_zone_then_return_error_not_found() {
-        let client = Client::new(create_rocket_with_mounts()).unwrap();
+        let client = create_client_with_mounts();
 
         let zone_uuid = "none-existing-uuid";
         let response = get_zone_return_response(&client, zone_uuid);
