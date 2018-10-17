@@ -1,8 +1,9 @@
-use rocket::response::status;
-use rocket::{Rocket, State};
+use rocket::response::{self, status, Responder};
+use rocket::{Request, Response, Rocket, State};
 use rocket_contrib::Json;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::collections::HashMap;
+use std::io::Cursor;
 
 struct Zone {
     name: &'static str,
@@ -16,6 +17,14 @@ impl Serialize for Zone {
         let mut state = serializer.serialize_struct("Zone", 1)?;
         state.serialize_field("name", &self.name)?;
         state.end()
+    }
+}
+
+impl<'r> Responder<'r> for Zone {
+    fn respond_to(self, _: &Request) -> response::Result<'r> {
+        Response::build()
+            .sized_body(Cursor::new(format!("{{\"name\":\"{}\"}}", self.name)))
+            .ok()
     }
 }
 
@@ -62,8 +71,11 @@ fn get_zones(zones: State<ZoneCollection>) -> Json {
 }
 
 #[put("/")]
-fn put_zones(zones: State<ZoneCollection>) -> status::Created<&str> {
-    status::Created("/zones/new-uuid".to_string(), Some(""))
+fn put_zones() -> status::Created<Zone> {
+    let zone = Zone {
+        name: "Living Room",
+    };
+    status::Created("/zones/new-uuid".to_string(), Some(zone))
 }
 
 #[get("/<uuid>")]
@@ -221,5 +233,19 @@ mod tests {
         let response_uri = response.headers().get_one("Location").unwrap();
 
         assert!(response_uri.starts_with("/zones/"));
+    }
+
+    #[test]
+    fn when_put_zone_then_response_body_contains_new_zone() {
+        let zones = ZoneCollection::new();
+        let client = create_client_with_mounts(zones);
+        let name = "Living Room";
+        let zone = Zone { name };
+
+        let mut response = put_zone_return_response(&client, &zone);
+        let body = response.body_string().unwrap();
+
+        let expected = Json(json!({ "name": zone.name })).to_string();
+        assert_eq!(expected, body);
     }
 }
