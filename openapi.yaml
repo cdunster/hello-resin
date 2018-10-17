@@ -17,6 +17,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Zones"
+    put:
+      tags:
+        - Zones
+      summary: Add a new zone to the list of zones.
+      requestBody:
+        description: The new zone to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Zone"
+      responses:
+        201:
+          description: CREATED - Empty response body.
 
   /zones/{zoneUuid}:
     get:
