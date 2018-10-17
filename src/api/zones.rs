@@ -1,6 +1,5 @@
 use rocket::response::status;
-use rocket::Rocket;
-use rocket::State;
+use rocket::{Rocket, State};
 use rocket_contrib::Json;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::collections::HashMap;
@@ -209,5 +208,18 @@ mod tests {
         let response = put_zone_return_response(&client, &zone);
 
         assert_eq!(Status::Created, response.status());
+    }
+
+    #[test]
+    fn when_put_zone_then_response_contains_new_zone_uri() {
+        let zones = ZoneCollection::new();
+        let client = create_client_with_mounts(zones);
+        let name = "Living Room";
+        let zone = Zone { name };
+
+        let response = put_zone_return_response(&client, &zone);
+        let response_uri = response.headers().get_one("Location").unwrap();
+
+        assert!(response_uri.starts_with("/zones/"));
     }
 }
