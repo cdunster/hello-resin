@@ -1,3 +1,4 @@
+use rocket::response::status;
 use rocket::Rocket;
 use rocket::State;
 use rocket_contrib::Json;
@@ -52,13 +53,18 @@ impl Serialize for ZoneCollection {
 
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
-        .mount("/zones", routes![get_zones, get_zone_from_uuid])
+        .mount("/zones", routes![get_zones, put_zones, get_zone_from_uuid])
         .manage(zones)
 }
 
 #[get("/")]
 fn get_zones(zones: State<ZoneCollection>) -> Json {
     Json(json!(zones.inner()))
+}
+
+#[put("/")]
+fn put_zones(zones: State<ZoneCollection>) -> status::Created<&str> {
+    status::Created("/zones/new-uuid".to_string(), Some(""))
 }
 
 #[get("/<uuid>")]
@@ -183,5 +189,25 @@ mod tests {
         let response = get_zone_return_response(&client, zone_uuid);
 
         assert_eq!(Status::NotFound, response.status());
+    }
+
+    fn put_zone_return_response<'c>(client: &'c Client, zone: &Zone) -> LocalResponse<'c> {
+        client
+            .put("/zones")
+            .body(Json(json!(zone)).to_string())
+            .header(ContentType::JSON)
+            .dispatch()
+    }
+
+    #[test]
+    fn when_put_zone_then_get_201_response() {
+        let zones = ZoneCollection::new();
+        let client = create_client_with_mounts(zones);
+        let name = "Living Room";
+        let zone = Zone { name };
+
+        let response = put_zone_return_response(&client, &zone);
+
+        assert_eq!(Status::Created, response.status());
     }
 }
