@@ -42,6 +42,7 @@ paths:
 components:
   schemas:
     Zone:
+      type: object
       properties:
         name:
           type: string
@@ -54,15 +55,9 @@ components:
       type: object
       properties:
         zones:
-          type: array
-          items:
-            properties:
-              uuid:
-                type: string
-                format: uuid
-                readOnly: true
-                uniqueItems: true
-                description: Unique identifier for a Zone.
-                example: 7bd897d5-195c-4fc3-8d34-59d960d94a33
-              zone:
-                $ref: "#components/schemas/Zone"
+          type: object
+          additionalProperties:
+            $ref: "#components/schemas/Zone"
+          example:
+            "8a70d6f5-a877-4331-8f15-0f20e4d34c0f": { "name": Living Room }
+            "a805847b-0df2-44b8-9a49-b3aebd8eecb2": { "name": Bedroom }

@@ -1,9 +1,54 @@
 use rocket::Rocket;
 use rocket::State;
 use rocket_contrib::Json;
+use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::collections::HashMap;
 
-pub type ZoneCollection = HashMap<&'static str, &'static str>;
+struct Zone {
+    name: &'static str,
+}
+
+impl Serialize for Zone {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Zone", 1)?;
+        state.serialize_field("name", &self.name)?;
+        state.end()
+    }
+}
+
+pub struct ZoneCollection {
+    zones: HashMap<&'static str, Zone>,
+}
+
+impl ZoneCollection {
+    pub fn new() -> ZoneCollection {
+        ZoneCollection {
+            zones: HashMap::new(),
+        }
+    }
+
+    fn add(&mut self, uuid: &'static str, name: &'static str) {
+        self.zones.insert(uuid, Zone { name });
+    }
+
+    fn get(&self, uuid: &str) -> Option<&Zone> {
+        self.zones.get(uuid)
+    }
+}
+
+impl Serialize for ZoneCollection {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("ZoneCollection", 1)?;
+        state.serialize_field("zones", &self.zones)?;
+        state.end()
+    }
+}
 
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
@@ -12,16 +57,14 @@ pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
 }
 
 #[get("/")]
-fn get_zones() -> Json {
-    Json(json!({
-        "zones": []
-    }))
+fn get_zones(zones: State<ZoneCollection>) -> Json {
+    Json(json!(zones.inner()))
 }
 
 #[get("/<uuid>")]
 fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollection>) -> Option<Json> {
-    if let Some(zone_name) = zones.get(uuid.as_str()) {
-        Some(Json(json!({ "name": zone_name })))
+    if let Some(zone) = zones.get(&uuid) {
+        Some(Json(json!(zone)))
     } else {
         None
     }
@@ -41,14 +84,41 @@ mod tests {
     }
 
     #[test]
-    fn given_no_zones_when_get_zones_then_return_json_object_with_empty_array() {
+    fn given_no_zones_when_get_zones_then_return_empty_json_object() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
 
         let expected = Json(json!({
-            "zones": []
+            "zones": {}
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn given_zones_when_get_zones_then_return_json_object_with_uuids_mapped_to_zones() {
+        let mut zones = ZoneCollection::new();
+        let zone1_uuid = "test-uuid-123";
+        let zone1_name = "Zone Name";
+        let zone2_uuid = "different-uuid-456";
+        let zone2_name = "Different Name";
+        zones.add(zone1_uuid, zone1_name);
+        zones.add(zone2_uuid, zone2_name);
+        let client = create_client_with_mounts(zones);
+
+        let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let expected = Json(json!({
+            "zones": {
+                zone1_uuid: {
+                    "name": zone1_name
+                },
+                zone2_uuid: {
+                    "name": zone2_name
+                }
+            }
         })).to_string();
         assert_eq!(expected, body);
     }
@@ -73,7 +143,7 @@ mod tests {
         let mut zones = ZoneCollection::new();
         let zone_uuid = "test-uuid-123";
         let zone_name = "Zone Name";
-        zones.insert(zone_uuid, zone_name);
+        zones.add(zone_uuid, zone_name);
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, zone_uuid);
@@ -89,9 +159,8 @@ mod tests {
         let zone1_name = "Zone Name";
         let zone2_uuid = "different-uuid-456";
         let zone2_name = "Different Name";
-        zones.insert(zone1_uuid, zone1_name);
-        zones.insert(zone2_uuid, zone2_name);
-
+        zones.add(zone1_uuid, zone1_name);
+        zones.add(zone2_uuid, zone2_name);
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, zone1_uuid);

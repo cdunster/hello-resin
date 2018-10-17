@@ -7,3 +7,4 @@ authors = ["Callum Dunster <calonthexbox@hotmail.com>"]
 rocket = "0.3.17"
 rocket_codegen = "0.3.17"
 rocket_contrib = "0.3.17"
+serde = "1.0.79"
