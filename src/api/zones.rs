@@ -66,7 +66,7 @@ impl Serialize for ZoneCollection {
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
         .mount("/zones", routes![get_zones, put_zones, get_zone_from_uuid])
-        .manage(Mutex::new(zones))
+        .manage(ZoneCollectionState::new(zones))
 }
 
 #[get("/")]
