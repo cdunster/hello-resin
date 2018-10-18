@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Mutex;
 
+#[derive(Clone, Copy)]
 struct Zone {
     name: &'static str,
 }
@@ -42,8 +43,8 @@ impl ZoneCollection {
         }
     }
 
-    fn add(&mut self, uuid: &'static str, name: &'static str) {
-        self.zones.insert(uuid, Zone { name });
+    fn add(&mut self, uuid: &'static str, zone: Zone) {
+        self.zones.insert(uuid, zone);
     }
 
     fn get(&self, uuid: &str) -> Option<&Zone> {
@@ -75,11 +76,11 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
 
 #[put("/")]
 fn put_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
-    zones.lock().unwrap().add("new-uuid", "Living Room");
-
     let zone = Zone {
         name: "Living Room",
     };
+    zones.lock().unwrap().add("new-uuid", zone);
+
     status::Created("/zones/new-uuid".to_string(), Some(zone))
 }
 
@@ -126,8 +127,8 @@ mod tests {
         let zone1_name = "Zone Name";
         let zone2_uuid = "different-uuid-456";
         let zone2_name = "Different Name";
-        zones.add(zone1_uuid, zone1_name);
-        zones.add(zone2_uuid, zone2_name);
+        zones.add(zone1_uuid, Zone { name: zone1_name });
+        zones.add(zone2_uuid, Zone { name: zone2_name });
         let client = create_client_with_mounts(zones);
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
@@ -166,7 +167,7 @@ mod tests {
         let mut zones = ZoneCollection::new();
         let zone_uuid = "test-uuid-123";
         let zone_name = "Zone Name";
-        zones.add(zone_uuid, zone_name);
+        zones.add(zone_uuid, Zone { name: zone_name });
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, zone_uuid);
@@ -182,8 +183,8 @@ mod tests {
         let zone1_name = "Zone Name";
         let zone2_uuid = "different-uuid-456";
         let zone2_name = "Different Name";
-        zones.add(zone1_uuid, zone1_name);
-        zones.add(zone2_uuid, zone2_name);
+        zones.add(zone1_uuid, Zone { name: zone1_name });
+        zones.add(zone2_uuid, Zone { name: zone2_name });
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, zone1_uuid);
@@ -249,6 +250,7 @@ mod tests {
         let zone = Zone { name };
 
         let mut response = put_zone_return_response(&client, &zone);
+        println!("{:?}", response);
         let body = response.body_string().unwrap();
 
         let expected = Json(json!({ "name": zone.name })).to_string();
