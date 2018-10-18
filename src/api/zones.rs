@@ -69,12 +69,12 @@ pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
         .manage(ZoneCollectionState::new(zones))
 }
 
-#[get("/")]
+#[get("/", format = "application/json")]
 fn get_zones(zones: State<ZoneCollectionState>) -> Json {
     Json(json!(zones.inner()))
 }
 
-#[post("/")]
+#[post("/", format = "application/json")]
 fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
     let zone = Zone {
         name: "Living Room",
@@ -84,7 +84,7 @@ fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
     status::Created("/zones/new-uuid".to_string(), Some(zone))
 }
 
-#[get("/<uuid>")]
+#[get("/<uuid>", format = "application/json")]
 fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json> {
     if let Some(zone) = zones.lock().unwrap().get(&uuid) {
         Some(Json(json!(zone)))
