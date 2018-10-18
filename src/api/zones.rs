@@ -65,7 +65,7 @@ impl Serialize for ZoneCollection {
 
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
-        .mount("/zones", routes![get_zones, put_zones, get_zone_from_uuid])
+        .mount("/zones", routes![get_zones, post_zones, get_zone_from_uuid])
         .manage(ZoneCollectionState::new(zones))
 }
 
@@ -74,8 +74,8 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
     Json(json!(zones.inner()))
 }
 
-#[put("/")]
-fn put_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
+#[post("/")]
+fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
     let zone = Zone {
         name: "Living Room",
     };
@@ -209,47 +209,47 @@ mod tests {
         assert_eq!(Status::NotFound, response.status());
     }
 
-    fn put_zone_return_response<'c>(client: &'c Client, zone: &Zone) -> LocalResponse<'c> {
+    fn post_zone_return_response<'c>(client: &'c Client, zone: &Zone) -> LocalResponse<'c> {
         client
-            .put("/zones")
+            .post("/zones")
             .body(Json(json!(zone)).to_string())
             .header(ContentType::JSON)
             .dispatch()
     }
 
     #[test]
-    fn when_put_zone_then_get_201_response() {
+    fn when_post_zone_then_get_201_response() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
         let zone = Zone { name };
 
-        let response = put_zone_return_response(&client, &zone);
+        let response = post_zone_return_response(&client, &zone);
 
         assert_eq!(Status::Created, response.status());
     }
 
     #[test]
-    fn when_put_zone_then_response_contains_new_zone_uri() {
+    fn when_post_zone_then_response_contains_new_zone_uri() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
         let zone = Zone { name };
 
-        let response = put_zone_return_response(&client, &zone);
+        let response = post_zone_return_response(&client, &zone);
         let response_uri = response.headers().get_one("Location").unwrap();
 
         assert!(response_uri.starts_with("/zones/"));
     }
 
     #[test]
-    fn when_put_zone_then_response_body_contains_new_zone() {
+    fn when_post_zone_then_response_body_contains_new_zone() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
         let zone = Zone { name };
 
-        let mut response = put_zone_return_response(&client, &zone);
+        let mut response = post_zone_return_response(&client, &zone);
         println!("{:?}", response);
         let body = response.body_string().unwrap();
 
@@ -262,13 +262,13 @@ mod tests {
     }
 
     #[test]
-    fn when_put_zone_then_new_zone_added() {
+    fn when_post_zone_then_new_zone_added() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
         let zone = Zone { name };
 
-        put_zone_return_response(&client, &zone);
+        post_zone_return_response(&client, &zone);
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
