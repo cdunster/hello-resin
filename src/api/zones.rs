@@ -85,9 +85,9 @@ fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
 }
 
 #[get("/<uuid>", format = "application/json")]
-fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json> {
+fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get(&uuid) {
-        Some(Json(json!(zone)))
+        Some(Json(*zone))
     } else {
         None
     }
@@ -279,5 +279,24 @@ mod tests {
         let zone = get_zone_with_name(name, &mut zones);
 
         assert!(zone.is_some());
+    }
+
+    #[test]
+    fn when_get_zone_then_zone_remains() {
+        let mut zones = ZoneCollection::new();
+        let zone_uuid = "test-uuid-123";
+        let zone_name = "Zone Name";
+        zones.add(zone_uuid, Zone { name: zone_name });
+        let client = create_client_with_mounts(zones);
+
+        let body = get_zone_return_response_body_string(&client, zone_uuid);
+
+        let expected = Json(json!({ "name": zone_name })).to_string();
+        assert_eq!(expected, body);
+
+        let body = get_zone_return_response_body_string(&client, zone_uuid);
+
+        let expected = Json(json!({ "name": zone_name })).to_string();
+        assert_eq!(expected, body);
     }
 }
