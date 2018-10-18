@@ -4,6 +4,7 @@ use rocket_contrib::Json;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::collections::HashMap;
 use std::io::Cursor;
+use std::sync::Mutex;
 
 struct Zone {
     name: &'static str,
@@ -27,6 +28,8 @@ impl<'r> Responder<'r> for Zone {
             .ok()
     }
 }
+
+type ZoneCollectionState = Mutex<ZoneCollection>;
 
 pub struct ZoneCollection {
     zones: HashMap<&'static str, Zone>,
@@ -62,16 +65,18 @@ impl Serialize for ZoneCollection {
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
         .mount("/zones", routes![get_zones, put_zones, get_zone_from_uuid])
-        .manage(zones)
+        .manage(Mutex::new(zones))
 }
 
 #[get("/")]
-fn get_zones(zones: State<ZoneCollection>) -> Json {
+fn get_zones(zones: State<ZoneCollectionState>) -> Json {
     Json(json!(zones.inner()))
 }
 
 #[put("/")]
-fn put_zones() -> status::Created<Zone> {
+fn put_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
+    zones.lock().unwrap().add("new-uuid", "Living Room");
+
     let zone = Zone {
         name: "Living Room",
     };
@@ -79,8 +84,8 @@ fn put_zones() -> status::Created<Zone> {
 }
 
 #[get("/<uuid>")]
-fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollection>) -> Option<Json> {
-    if let Some(zone) = zones.get(&uuid) {
+fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json> {
+    if let Some(zone) = zones.lock().unwrap().get(&uuid) {
         Some(Json(json!(zone)))
     } else {
         None
@@ -93,6 +98,7 @@ mod tests {
     use rocket::http::{ContentType, Status};
     use rocket::local::{Client, LocalResponse};
     use rocket_contrib::Json;
+    use serde_json::Value;
 
     fn create_client_with_mounts(zones: ZoneCollection) -> Client {
         let rocket = rocket::ignite();
@@ -247,5 +253,32 @@ mod tests {
 
         let expected = Json(json!({ "name": zone.name })).to_string();
         assert_eq!(expected, body);
+    }
+
+    fn get_zone_with_name<'z>(
+        name: &str,
+        zones: &'z mut serde_json::map::Values,
+    ) -> Option<&'z rocket_contrib::Value> {
+        zones.find(|&zone| zone.get("name").unwrap() == name)
+    }
+
+    #[test]
+    fn when_put_zone_then_new_zone_added() {
+        let zones = ZoneCollection::new();
+        let client = create_client_with_mounts(zones);
+        let name = "Living Room";
+        let zone = Zone { name };
+
+        put_zone_return_response(&client, &zone);
+
+        let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let body: Value = serde_json::from_str(&body).unwrap();
+        let mut zones = body["zones"].as_object().unwrap().values();
+
+        let zone = get_zone_with_name(name, &mut zones);
+
+        assert!(zone.is_some());
     }
 }
