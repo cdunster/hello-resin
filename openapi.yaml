@@ -17,7 +17,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Zones"
-    put:
+    post:
       tags:
         - Zones
       summary: Add a new zone to the list of zones.
