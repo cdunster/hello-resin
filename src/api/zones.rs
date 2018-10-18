@@ -97,8 +97,8 @@ mod tests {
     use super::*;
     use rocket::http::{ContentType, Status};
     use rocket::local::{Client, LocalResponse};
-    use rocket_contrib::Json;
-    use serde_json::Value;
+    use rocket_contrib::{Json, Value};
+    use serde_json::map::Values;
 
     fn create_client_with_mounts(zones: ZoneCollection) -> Client {
         let rocket = rocket::ignite();
@@ -255,10 +255,7 @@ mod tests {
         assert_eq!(expected, body);
     }
 
-    fn get_zone_with_name<'z>(
-        name: &str,
-        zones: &'z mut serde_json::map::Values,
-    ) -> Option<&'z rocket_contrib::Value> {
+    fn get_zone_with_name<'z>(name: &str, zones: &'z mut Values) -> Option<&'z Value> {
         zones.find(|&zone| zone.get("name").unwrap() == name)
     }
 
