@@ -1,21 +1,12 @@
-use rocket::response::{self, status, Responder};
-use rocket::{Request, Response, Rocket, State};
+use rocket::response::status;
+use rocket::{Rocket, State};
 use rocket_contrib::Json;
 use std::collections::HashMap;
-use std::io::Cursor;
 use std::sync::Mutex;
 
 #[derive(Clone, Copy, Serialize)]
 struct Zone {
     name: &'static str,
-}
-
-impl<'r> Responder<'r> for Zone {
-    fn respond_to(self, _: &Request) -> response::Result<'r> {
-        Response::build()
-            .sized_body(Cursor::new(format!("{{\"name\":\"{}\"}}", self.name)))
-            .ok()
-    }
 }
 
 type ZoneCollectionState = Mutex<ZoneCollection>;
@@ -53,13 +44,13 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
 }
 
 #[post("/", format = "application/json")]
-fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Zone> {
+fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Json<Zone>> {
     let zone = Zone {
         name: "Living Room",
     };
     zones.lock().unwrap().add("new-uuid", zone);
 
-    status::Created("/zones/new-uuid".to_string(), Some(zone))
+    status::Created("/zones/new-uuid".to_string(), Some(Json(zone)))
 }
 
 #[get("/<uuid>", format = "application/json")]
