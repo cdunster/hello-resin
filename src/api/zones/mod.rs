@@ -4,9 +4,9 @@ use rocket_contrib::Json;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-#[derive(Clone, Copy, Serialize)]
+#[derive(Clone, Serialize)]
 struct Zone {
-    name: &'static str,
+    name: String,
 }
 
 type ZoneCollectionState = Mutex<ZoneCollection>;
@@ -46,9 +46,9 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
 #[post("/", format = "application/json")]
 fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Json<Zone>> {
     let zone = Zone {
-        name: "Living Room",
+        name: "Living Room".to_string(),
     };
-    zones.lock().unwrap().add("new-uuid", zone);
+    zones.lock().unwrap().add("new-uuid", zone.clone());
 
     status::Created("/zones/new-uuid".to_string(), Some(Json(zone)))
 }
@@ -56,7 +56,7 @@ fn post_zones(zones: State<ZoneCollectionState>) -> status::Created<Json<Zone>> 
 #[get("/<uuid>", format = "application/json")]
 fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get(&uuid) {
-        Some(Json(*zone))
+        Some(Json(zone.clone()))
     } else {
         None
     }

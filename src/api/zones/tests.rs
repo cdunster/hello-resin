@@ -30,8 +30,18 @@ fn given_zones_when_get_zones_then_return_json_object_with_uuids_mapped_to_zones
     let zone1_name = "Zone Name";
     let zone2_uuid = "different-uuid-456";
     let zone2_name = "Different Name";
-    zones.add(zone1_uuid, Zone { name: zone1_name });
-    zones.add(zone2_uuid, Zone { name: zone2_name });
+    zones.add(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones.add(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
     let client = create_client_with_mounts(zones);
 
     let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
@@ -70,7 +80,12 @@ fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() 
     let mut zones = ZoneCollection::new();
     let zone_uuid = "test-uuid-123";
     let zone_name = "Zone Name";
-    zones.add(zone_uuid, Zone { name: zone_name });
+    zones.add(
+        zone_uuid,
+        Zone {
+            name: zone_name.to_string(),
+        },
+    );
     let client = create_client_with_mounts(zones);
 
     let body = get_zone_return_response_body_string(&client, zone_uuid);
@@ -86,8 +101,18 @@ fn given_zones_when_get_zones_individually_then_return_correct_json_zone_object_
     let zone1_name = "Zone Name";
     let zone2_uuid = "different-uuid-456";
     let zone2_name = "Different Name";
-    zones.add(zone1_uuid, Zone { name: zone1_name });
-    zones.add(zone2_uuid, Zone { name: zone2_name });
+    zones.add(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones.add(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
     let client = create_client_with_mounts(zones);
 
     let body = get_zone_return_response_body_string(&client, zone1_uuid);
@@ -125,7 +150,9 @@ fn when_post_zone_then_get_201_response() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone { name };
+    let zone = Zone {
+        name: name.to_string(),
+    };
 
     let response = post_zone_return_response(&client, &zone);
 
@@ -137,7 +164,9 @@ fn when_post_zone_then_response_contains_new_zone_uri() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone { name };
+    let zone = Zone {
+        name: name.to_string(),
+    };
 
     let response = post_zone_return_response(&client, &zone);
     let response_uri = response.headers().get_one("Location").unwrap();
@@ -150,7 +179,9 @@ fn when_post_zone_then_response_body_contains_new_zone() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone { name };
+    let zone = Zone {
+        name: name.to_string(),
+    };
 
     let mut response = post_zone_return_response(&client, &zone);
     println!("{:?}", response);
@@ -169,7 +200,9 @@ fn when_post_zone_then_new_zone_added() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone { name };
+    let zone = Zone {
+        name: name.to_string(),
+    };
 
     post_zone_return_response(&client, &zone);
 
@@ -189,7 +222,12 @@ fn when_get_zone_then_zone_remains() {
     let mut zones = ZoneCollection::new();
     let zone_uuid = "test-uuid-123";
     let zone_name = "Zone Name";
-    zones.add(zone_uuid, Zone { name: zone_name });
+    zones.add(
+        zone_uuid,
+        Zone {
+            name: zone_name.to_string(),
+        },
+    );
     let client = create_client_with_mounts(zones);
 
     let body = get_zone_return_response_body_string(&client, zone_uuid);
