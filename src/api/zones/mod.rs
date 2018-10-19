@@ -1,25 +1,13 @@
 use rocket::response::{self, status, Responder};
 use rocket::{Request, Response, Rocket, State};
 use rocket_contrib::Json;
-use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Mutex;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize)]
 struct Zone {
     name: &'static str,
-}
-
-impl Serialize for Zone {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Zone", 1)?;
-        state.serialize_field("name", &self.name)?;
-        state.end()
-    }
 }
 
 impl<'r> Responder<'r> for Zone {
@@ -32,6 +20,7 @@ impl<'r> Responder<'r> for Zone {
 
 type ZoneCollectionState = Mutex<ZoneCollection>;
 
+#[derive(Serialize)]
 pub struct ZoneCollection {
     zones: HashMap<&'static str, Zone>,
 }
@@ -49,17 +38,6 @@ impl ZoneCollection {
 
     fn get(&self, uuid: &str) -> Option<&Zone> {
         self.zones.get(uuid)
-    }
-}
-
-impl Serialize for ZoneCollection {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("ZoneCollection", 1)?;
-        state.serialize_field("zones", &self.zones)?;
-        state.end()
     }
 }
 
