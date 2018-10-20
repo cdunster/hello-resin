@@ -192,7 +192,9 @@ fn when_post_zone_then_response_body_contains_new_zone() {
 }
 
 fn get_zone_with_name<'z>(name: &str, zones: &'z mut Values) -> Option<&'z Value> {
-    zones.find(|&zone| zone.get("name").unwrap() == name)
+    zones
+        .inspect(|&zone| println!("Found zone: {}", zone))
+        .find(|&zone| zone.get("name").unwrap() == name)
 }
 
 #[test]
