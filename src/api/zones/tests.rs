@@ -286,3 +286,49 @@ fn when_post_multiple_zones_then_new_zones_added() {
     let zone = get_zone_with_name(&zone2.name, &mut zones);
     assert!(zone.is_some());
 }
+
+fn patch_zone_return_response<'c>(
+    client: &'c Client,
+    uuid: Uuid,
+    zone_json: Json,
+) -> LocalResponse<'c> {
+    client
+        .patch(format!("/zones/{}", uuid))
+        .body(zone_json.to_string())
+        .header(ContentType::JSON)
+        .dispatch()
+}
+
+#[test]
+fn given_zones_when_patch_zone_then_return_updated_zone_object() {
+    let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
+    let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone1_name = "Zone Name";
+    let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone2_name = "Different Name";
+    zones_map.insert(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones_map.insert(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
+
+    let zones = ZoneCollection { zones: zones_map };
+
+    let client = create_client_with_mounts(zones);
+
+    let patched_name = "New zone name".to_string();
+    let zone_json = Json(json!({ "name": patched_name }));
+    let mut response = patch_zone_return_response(&client, zone1_uuid, zone_json);
+
+    let returned_zone: Zone = serde_json::from_str(&response.body_string().unwrap()).unwrap();
+    let expected_zone = Zone { name: patched_name };
+
+    assert_eq!(expected_zone, returned_zone);
+}
