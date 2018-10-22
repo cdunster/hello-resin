@@ -1,8 +1,10 @@
 use rocket::response::status;
 use rocket::{Rocket, State};
-use rocket_contrib::Json;
+use rocket_contrib::{Json, UUID};
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use uuid::Uuid;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct Zone {
@@ -13,7 +15,7 @@ type ZoneCollectionState = Mutex<ZoneCollection>;
 
 #[derive(Serialize)]
 pub struct ZoneCollection {
-    zones: HashMap<&'static str, Zone>,
+    zones: HashMap<Uuid, Zone>,
 }
 
 impl ZoneCollection {
@@ -23,11 +25,14 @@ impl ZoneCollection {
         }
     }
 
-    fn add(&mut self, uuid: &'static str, zone: Zone) {
+    fn add(&mut self, zone: Zone) -> Entry<Uuid, Zone> {
+        let uuid = Uuid::new_v4();
         self.zones.insert(uuid, zone);
+
+        self.zones.entry(uuid)
     }
 
-    fn get(&self, uuid: &str) -> Option<&Zone> {
+    fn get(&self, uuid: &uuid::Uuid) -> Option<&Zone> {
         self.zones.get(uuid)
     }
 }
@@ -45,14 +50,15 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
 
 #[post("/", format = "application/json", data = "<zone>")]
 fn post_zones(zone: Json<Zone>, zones: State<ZoneCollectionState>) -> status::Created<Json<Zone>> {
-    zones.lock().unwrap().add("new-uuid", zone.clone());
+    let mut zones = zones.lock().unwrap();
+    let zone_entry = zones.add(zone.clone());
 
-    status::Created("/zones/new-uuid".to_string(), Some(zone))
+    status::Created(format!("/zones/{}", zone_entry.key()), Some(zone))
 }
 
 #[get("/<uuid>", format = "application/json")]
-fn get_zone_from_uuid(uuid: String, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
-    if let Some(zone) = zones.lock().unwrap().get(&uuid) {
+fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
+    if let Some(zone) = zones.lock().unwrap().get(&uuid.into_inner()) {
         Some(Json(zone.clone()))
     } else {
         None
