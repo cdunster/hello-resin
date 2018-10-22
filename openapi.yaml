@@ -53,6 +53,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/Zone"
 
+    patch:
+      tags:
+        - Zones
+      summary: Update the Zone with the given UUID.
+      parameters:
+        - name: zoneUuid
+          in: path
+          description: The unique identifier of the Zone to patch.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: The new zone to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Zone"
+      responses:
+        200:
+          description: OK - Body contains updated Zone object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+
 components:
   schemas:
     Zone:
