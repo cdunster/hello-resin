@@ -312,13 +312,56 @@ fn given_zones_when_patch_zone_then_return_updated_zone_object() {
     let client = create_client_with_mounts(zones);
 
     let patched_name = "New zone name".to_string();
-    let zone_json = Json(json!({ "name": patched_name }));
-    let mut response = patch_zone_return_response(&client, zone1_uuid, zone_json);
+    let patch_json = Json(json!({ "name": patched_name }));
+    let mut response = patch_zone_return_response(&client, zone1_uuid, patch_json);
 
     let returned_zone: Zone = serde_json::from_str(&response.body_string().unwrap()).unwrap();
     let expected_zone = Zone { name: patched_name };
 
     assert_eq!(expected_zone, returned_zone);
+}
+#[test]
+fn given_zones_when_patch_zone_then_zone_in_zone_collection_is_patched() {
+    let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
+    let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone1_name = "Zone Name";
+    let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone2_name = "Different Name";
+    zones_map.insert(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones_map.insert(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
+
+    let zones = ZoneCollection { zones: zones_map };
+
+    let client = create_client_with_mounts(zones);
+
+    let patched_name = "New zone name".to_string();
+    let patch_json = Json(json!({ "name": patched_name }));
+    patch_zone_return_response(&client, zone1_uuid, patch_json);
+
+    let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
+    let body = response.body_string().unwrap();
+
+    let expected = Json(json!({
+            "zones": {
+                zone1_uuid.to_string(): {
+                    "name": patched_name
+                },
+                zone2_uuid.to_string(): {
+                    "name": zone2_name
+                }
+            }
+        })).to_string();
+    assert_eq!(expected, body);
 }
 
 fn delete_zone_return_response<'c>(client: &'c Client, uuid: Uuid) -> LocalResponse<'c> {
