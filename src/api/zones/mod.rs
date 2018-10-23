@@ -20,9 +20,7 @@ pub struct ZoneCollection {
 
 impl ZoneCollection {
     pub fn new() -> ZoneCollection {
-        ZoneCollection {
-            zones: HashMap::new(),
-        }
+        ZoneCollection { zones: HashMap::new() }
     }
 
     fn add(&mut self, zone: Zone) -> Entry<Uuid, Zone> {
@@ -81,16 +79,8 @@ fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<J
     }
 }
 
-#[patch(
-    "/<uuid>",
-    format = "application/json",
-    data = "<patch_json>"
-)]
-fn patch_zone_from_uuid(
-    uuid: UUID,
-    patch_json: Json,
-    zones: State<ZoneCollectionState>,
-) -> Option<Json<Zone>> {
+#[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
+fn patch_zone_from_uuid(uuid: UUID, patch_json: Json, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get_mut(&uuid.into_inner()) {
         if let Some(patch_name) = patch_json["name"].as_str() {
             zone.name = patch_name.to_string().clone();

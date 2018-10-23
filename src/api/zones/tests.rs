@@ -159,9 +159,7 @@ fn when_post_zone_then_get_201_response() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone {
-        name: name.to_string(),
-    };
+    let zone = Zone { name: name.to_string() };
 
     let response = post_zone_return_response(&client, &zone);
 
@@ -173,9 +171,7 @@ fn when_post_zone_then_response_contains_new_zone_uri() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone {
-        name: name.to_string(),
-    };
+    let zone = Zone { name: name.to_string() };
 
     let response = post_zone_return_response(&client, &zone);
     let mut response_uri = response.headers().get_one("Location").unwrap().to_string();
@@ -192,9 +188,7 @@ fn when_post_zone_then_response_body_contains_new_zone() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone {
-        name: name.to_string(),
-    };
+    let zone = Zone { name: name.to_string() };
 
     let mut response = post_zone_return_response(&client, &zone);
     println!("{:?}", response);
@@ -215,9 +209,7 @@ fn when_post_zone_then_new_zone_added() {
     let zones = ZoneCollection::new();
     let client = create_client_with_mounts(zones);
     let name = "Living Room";
-    let zone = Zone {
-        name: name.to_string(),
-    };
+    let zone = Zone { name: name.to_string() };
 
     post_zone_return_response(&client, &zone);
 
@@ -287,11 +279,7 @@ fn when_post_multiple_zones_then_new_zones_added() {
     assert!(zone.is_some());
 }
 
-fn patch_zone_return_response<'c>(
-    client: &'c Client,
-    uuid: Uuid,
-    zone_json: Json,
-) -> LocalResponse<'c> {
+fn patch_zone_return_response<'c>(client: &'c Client, uuid: Uuid, zone_json: Json) -> LocalResponse<'c> {
     client
         .patch(format!("/zones/{}", uuid))
         .body(zone_json.to_string())
