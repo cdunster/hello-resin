@@ -68,6 +68,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/Zone"
 
+    delete:
+      tags:
+        - Zones
+      summary: Delete the Zone with the given UUID.
+      parameters:
+        - $ref: "#components/parameters/zoneUuid"
+      responses:
+        204:
+          description: OK - No content (empty body in response).
+
 components:
   parameters:
     zoneUuid:
