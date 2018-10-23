@@ -332,3 +332,74 @@ fn given_zones_when_patch_zone_then_return_updated_zone_object() {
 
     assert_eq!(expected_zone, returned_zone);
 }
+
+fn delete_zone_return_response<'c>(client: &'c Client, uuid: Uuid) -> LocalResponse<'c> {
+    client
+        .delete(format!("/zones/{}", uuid))
+        .header(ContentType::JSON)
+        .dispatch()
+}
+
+#[test]
+fn given_zones_when_delete_zone_then_return_204_no_content() {
+    let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
+    let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone1_name = "Zone Name";
+    let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone2_name = "Different Name";
+    zones_map.insert(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones_map.insert(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
+    let zones = ZoneCollection { zones: zones_map };
+    let client = create_client_with_mounts(zones);
+
+    let response = delete_zone_return_response(&client, zone1_uuid);
+
+    assert_eq!(Status::NoContent, response.status());
+}
+
+#[test]
+fn given_zones_when_delete_zone_then_zone_deleted() {
+    let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
+    let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone1_name = "Zone Name";
+    let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+    let zone2_name = "Different Name";
+    zones_map.insert(
+        zone1_uuid,
+        Zone {
+            name: zone1_name.to_string(),
+        },
+    );
+    zones_map.insert(
+        zone2_uuid,
+        Zone {
+            name: zone2_name.to_string(),
+        },
+    );
+    let zones = ZoneCollection { zones: zones_map };
+    let client = create_client_with_mounts(zones);
+
+    delete_zone_return_response(&client, zone1_uuid);
+
+    let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
+    let body = response.body_string().unwrap();
+
+    let expected = Json(json!({
+            "zones": {
+                zone2_uuid.to_string(): {
+                    "name": zone2_name
+                }
+            }
+        })).to_string();
+    assert_eq!(expected, body);
+}

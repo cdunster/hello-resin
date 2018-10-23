@@ -32,12 +32,16 @@ impl ZoneCollection {
         self.zones.entry(uuid)
     }
 
-    fn get(&self, uuid: &uuid::Uuid) -> Option<&Zone> {
+    fn get(&self, uuid: &Uuid) -> Option<&Zone> {
         self.zones.get(uuid)
     }
 
-    fn get_mut(&mut self, uuid: &uuid::Uuid) -> Option<&mut Zone> {
+    fn get_mut(&mut self, uuid: &Uuid) -> Option<&mut Zone> {
         self.zones.get_mut(uuid)
+    }
+
+    fn remove(&mut self, uuid: &Uuid) {
+        self.zones.remove(uuid);
     }
 }
 
@@ -49,7 +53,8 @@ pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
                 get_zones,
                 post_zones,
                 get_zone_from_uuid,
-                patch_zone_from_uuid
+                patch_zone_from_uuid,
+                delete_zone_from_uuid
             ],
         ).manage(ZoneCollectionState::new(zones))
 }
@@ -94,6 +99,12 @@ fn patch_zone_from_uuid(
     } else {
         None
     }
+}
+
+#[delete("/<uuid>", format = "application/json")]
+fn delete_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> status::NoContent {
+    zones.lock().unwrap().remove(&uuid);
+    status::NoContent
 }
 
 #[cfg(test)]
