@@ -23,7 +23,7 @@ mod get_zones {
     use super::*;
 
     #[test]
-    fn given_no_zones_when_get_zones_then_return_empty_json_object() {
+    fn with_no_zones_returns_empty_json_object() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
@@ -36,7 +36,7 @@ mod get_zones {
     }
 
     #[test]
-    fn given_zones_when_get_zones_then_return_json_object_with_uuids_mapped_to_zones() {
+    fn with_zones_returns_json_object_with_uuids_mapped_to_zones() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
         let zone1_name = "Zone Name";
@@ -88,7 +88,7 @@ mod get_zone {
     }
 
     #[test]
-    fn given_valid_uuid_when_get_single_zone_then_return_correct_json_zone_object() {
+    fn with_valid_uuid_returns_correct_json_zone_object() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
         let zone_name = "Zone Name";
@@ -110,7 +110,7 @@ mod get_zone {
     }
 
     #[test]
-    fn given_zones_when_get_zones_individually_then_return_correct_json_zone_object_each_time() {
+    fn multiple_zones_returns_correct_json_zone_object_each_time() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
         let zone1_name = "Zone Name";
@@ -145,7 +145,7 @@ mod get_zone {
     }
 
     #[test]
-    fn given_none_existing_uuid_when_get_zone_then_return_error_not_found() {
+    fn none_existing_uuid_returns_error_not_found() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
 
@@ -156,7 +156,7 @@ mod get_zone {
     }
 
     #[test]
-    fn when_get_zone_then_zone_remains() {
+    fn after_call_zone_remains() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
         let zone_name = "Zone Name";
@@ -197,7 +197,7 @@ mod post_zone {
     }
 
     #[test]
-    fn when_post_zone_then_get_201_response() {
+    fn returns_201_response() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
@@ -209,7 +209,7 @@ mod post_zone {
     }
 
     #[test]
-    fn when_post_zone_then_response_contains_new_zone_uri() {
+    fn response_contains_new_zone_uri() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
@@ -226,7 +226,7 @@ mod post_zone {
     }
 
     #[test]
-    fn when_post_zone_then_response_body_contains_new_zone() {
+    fn response_body_contains_new_zone() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
@@ -247,7 +247,7 @@ mod post_zone {
     }
 
     #[test]
-    fn when_post_zone_then_new_zone_added() {
+    fn adds_zone() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
@@ -267,7 +267,7 @@ mod post_zone {
     }
 
     #[test]
-    fn when_post_multiple_zones_then_new_zones_added() {
+    fn can_add_more_than_one_zone() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let zone1 = Zone {
@@ -308,7 +308,7 @@ mod patch_zone {
     }
 
     #[test]
-    fn given_zones_when_patch_zone_then_return_updated_zone_object() {
+    fn returns_updated_zone() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
@@ -341,7 +341,7 @@ mod patch_zone {
         assert_eq!(expected_zone, returned_zone);
     }
     #[test]
-    fn given_zones_when_patch_zone_then_zone_in_zone_collection_is_patched() {
+    fn updates_zone_collection() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
@@ -397,7 +397,7 @@ mod delete_zone {
     }
 
     #[test]
-    fn given_zones_when_delete_zone_then_return_204_no_content() {
+    fn with_zone_returns_204_no_content() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
@@ -424,7 +424,7 @@ mod delete_zone {
     }
 
     #[test]
-    fn given_zones_when_delete_zone_then_zone_deleted() {
+    fn zone_deleted() {
         let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
