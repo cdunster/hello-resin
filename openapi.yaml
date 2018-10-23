@@ -38,13 +38,7 @@ paths:
         - Zones
       summary: Get the details of the specified zone.
       parameters:
-        - name: zoneUuid
-          in: path
-          description: The unique identifier of the desired zone.
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/zoneUuid"
       responses:
         200:
           description: OK - Body contains Zone object.
@@ -58,13 +52,7 @@ paths:
         - Zones
       summary: Update the Zone with the given UUID.
       parameters:
-        - name: zoneUuid
-          in: path
-          description: The unique identifier of the Zone to patch.
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/zoneUuid"
       requestBody:
         description: The new zone to be added.
         required: true
@@ -81,6 +69,16 @@ paths:
                 $ref: "#/components/schemas/Zone"
 
 components:
+  parameters:
+    zoneUuid:
+      name: zoneUuid
+      in: path
+      description: The unique identifier of a single Zone.
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
     Zone:
       type: object
