@@ -17,6 +17,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Zones"
+
     post:
       tags:
         - Zones
@@ -38,7 +39,7 @@ paths:
         - Zones
       summary: Get the details of the specified zone.
       parameters:
-        - $ref: "#/components/parameters/zoneUuid"
+        - $ref: "#/components/parameters/zoneUuidPath"
       responses:
         200:
           description: OK - Body contains Zone object.
@@ -52,7 +53,7 @@ paths:
         - Zones
       summary: Update the Zone with the given UUID.
       parameters:
-        - $ref: "#/components/parameters/zoneUuid"
+        - $ref: "#/components/parameters/zoneUuidPath"
       requestBody:
         description: The new zone to be added.
         required: true
@@ -73,18 +74,38 @@ paths:
         - Zones
       summary: Delete the Zone with the given UUID.
       parameters:
-        - $ref: "#components/parameters/zoneUuid"
+        - $ref: "#components/parameters/zoneUuidPath"
       responses:
         204:
           description: OK - No content (empty body in response).
 
+  /devices?zoneUuid={zoneUuid}:
+    get:
+      tags:
+        - Devices
+      summary: Get a list of all devices in the system or zone if specified.
+      parameters:
+        - $ref: "#components/parameters/zoneUuidQuery"
+      responses:
+        200:
+          description: OK - Body contains object with list of devices.
+
 components:
   parameters:
-    zoneUuid:
+    zoneUuidPath:
       name: zoneUuid
       in: path
       description: The unique identifier of a single Zone.
       required: true
+      schema:
+        type: string
+        format: uuid
+
+    zoneUuidQuery:
+      name: zoneUuid
+      in: query
+      description: The unique identifier of a single Zone.
+      required: false
       schema:
         type: string
         format: uuid
