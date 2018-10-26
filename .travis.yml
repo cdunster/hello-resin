@@ -7,7 +7,7 @@ jobs:
     - stage: test
       script: cargo test --verbose
     - stage: deploy-resin
-      install: true
+      install: false
       script:
         - eval "$(ssh-agent -s)" #start the ssh agent
         - echo -e $RESIN_DEPLOY_KEY > id_rsa
