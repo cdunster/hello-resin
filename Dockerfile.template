@@ -73,7 +73,7 @@ WORKDIR /app
 COPY Rocket.toml .
 
 # Copy binary from builder image
-COPY --from=builder /app/target/release/hello-resin .
+COPY --from=builder /app/target/release/smart-home .
 
 # Launch application
-CMD "./hello-resin"
+CMD "./smart-home"
