@@ -83,12 +83,16 @@ paths:
     get:
       tags:
         - Devices
-      summary: Get a list of all devices in the system or zone if specified.
+      summary: Get a list of all devices in the specified zone.
       parameters:
         - $ref: "#components/parameters/zoneUuidQuery"
       responses:
         200:
-          description: OK - Body contains object with list of devices.
+          description: OK - Body contains object with list of devices in the Zone.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Devices"
 
 components:
   parameters:
@@ -131,3 +135,24 @@ components:
           example:
             "8a70d6f5-a877-4331-8f15-0f20e4d34c0f": { "name": Living Room }
             "a805847b-0df2-44b8-9a49-b3aebd8eecb2": { "name": Bedroom }
+
+    Device:
+      type: object
+      properties:
+        name:
+          type: string
+          description: User-friendly name for the Device.
+          uniqueItems: true
+          maxLength: 24
+          example: STRV
+
+    Devices:
+      type: object
+      properties:
+        devices:
+          type: object
+          additionalProperties:
+            $ref: "#components/schemas/Device"
+          example:
+            "56fd8e82-d260-46df-809f-662f070e9e1e": { "name": STRV }
+            "4edf5992-8511-4587-a118-b8d53473da0c": { "name": Main Light }
