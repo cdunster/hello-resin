@@ -79,6 +79,19 @@ paths:
         204:
           description: OK - No content (empty body in response).
 
+  /devices:
+    get:
+      tags:
+        - Devices
+      summary: Get a list of all devices in the system.
+      responses:
+        200:
+          description: OK - Body contains object with list of devices.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Devices"
+
   /devices?zoneUuid={zoneUuid}:
     get:
       tags:
