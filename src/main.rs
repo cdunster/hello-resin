@@ -14,9 +14,11 @@ mod api;
 
 fn main() {
     let zones = api::zones::ZoneCollection::new();
+    let devices = api::devices::DeviceCollection::new();
 
     let rocket = rocket::ignite();
     let rocket = api::mount(rocket);
     let rocket = api::zones::mount(rocket, zones);
+    let rocket = api::devices::mount(rocket, devices);
     rocket.launch();
 }

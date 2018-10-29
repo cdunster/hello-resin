@@ -1,5 +1,6 @@
 use rocket::Rocket;
 
+pub mod devices;
 pub mod zones;
 
 pub fn mount(rocket: Rocket) -> Rocket {

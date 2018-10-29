@@ -23,7 +23,7 @@ mod get_zones {
     use super::*;
 
     #[test]
-    fn with_no_zones_returns_empty_json_object() {
+    fn with_no_zones_returns_empty_json_object_with_zones_key() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
