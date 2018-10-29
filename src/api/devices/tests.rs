@@ -17,7 +17,6 @@ fn get_device_return_response_body_string(client: &Client, device_uuid: &str) ->
     response.body_string().unwrap()
 }
 
-#[cfg(test)]
 mod get_devices {
     use super::*;
 
@@ -75,7 +74,6 @@ mod get_devices {
     }
 }
 
-#[cfg(test)]
 mod get_device {
     use super::*;
 
@@ -183,7 +181,6 @@ mod get_device {
 
 }
 
-#[cfg(test)]
 mod patch_device {
     use super::*;
 

@@ -18,7 +18,6 @@ fn get_zone_return_response_body_string(client: &Client, zone_uuid: &str) -> Str
     response.body_string().unwrap()
 }
 
-#[cfg(test)]
 mod get_zones {
     use super::*;
 
@@ -76,7 +75,6 @@ mod get_zones {
     }
 }
 
-#[cfg(test)]
 mod get_zone {
     use super::*;
 
@@ -184,7 +182,6 @@ mod get_zone {
 
 }
 
-#[cfg(test)]
 mod post_zone {
     use super::*;
 
@@ -295,7 +292,6 @@ mod post_zone {
     }
 }
 
-#[cfg(test)]
 mod patch_zone {
     use super::*;
 
@@ -385,7 +381,6 @@ mod patch_zone {
     }
 }
 
-#[cfg(test)]
 mod delete_zone {
     use super::*;
 
