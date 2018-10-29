@@ -9,10 +9,10 @@ paths:
     get:
       tags:
         - Zones
-      summary: List all the zones in the system.
+      summary: List all the Zones in the system.
       responses:
         200:
-          description: OK - Body contains object with list of zones.
+          description: OK - Body contains object with list of Zones.
           content:
             application/json:
               schema:
@@ -21,9 +21,9 @@ paths:
     post:
       tags:
         - Zones
-      summary: Add a new zone to the list of zones.
+      summary: Add a new Zone to the list of Zones.
       requestBody:
-        description: The new zone to be added.
+        description: The new Zone to be added.
         required: true
         content:
           application/json:
@@ -37,7 +37,7 @@ paths:
     get:
       tags:
         - Zones
-      summary: Get the details of the specified zone.
+      summary: Get the details of the specified Zone.
       parameters:
         - $ref: "#/components/parameters/zoneUuidPath"
       responses:
@@ -55,7 +55,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/zoneUuidPath"
       requestBody:
-        description: The new zone to be added.
+        description: The modification(s) to be made to the Zone.
         required: true
         content:
           application/json:
@@ -83,10 +83,10 @@ paths:
     get:
       tags:
         - Devices
-      summary: Get a list of all devices in the system.
+      summary: Get a list of all Devices in the system.
       responses:
         200:
-          description: OK - Body contains object with list of devices.
+          description: OK - Body contains object with list of Devices.
           content:
             application/json:
               schema:
@@ -96,12 +96,12 @@ paths:
     get:
       tags:
         - Devices
-      summary: Get a list of all devices in the specified zone.
+      summary: Get a list of all Devices in the specified Zone.
       parameters:
         - $ref: "#components/parameters/zoneUuidQuery"
       responses:
         200:
-          description: OK - Body contains object with list of devices in the Zone.
+          description: OK - Body contains object with list of Devices in the Zone.
           content:
             application/json:
               schema:
@@ -111,7 +111,7 @@ paths:
     get:
       tags:
         - Devices
-      summary: Get the details of the specified device.
+      summary: Get the details of the specified Device.
       parameters:
         - $ref: "#components/parameters/deviceUuidPath"
       responses:
