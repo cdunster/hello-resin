@@ -107,6 +107,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/Devices"
 
+  /devices/{deviceUuid}:
+    get:
+      tags:
+        - Devices
+      summary: Get the details of the specified device.
+      parameters:
+        - $ref: "#components/parameters/deviceUuidPath"
+      responses:
+        200:
+          description: OK - Body contains Device object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+
 components:
   parameters:
     zoneUuidPath:
@@ -123,6 +138,15 @@ components:
       in: query
       description: The unique identifier of a single Zone.
       required: false
+      schema:
+        type: string
+        format: uuid
+
+    deviceUuidPath:
+      name: deviceUuid
+      in: path
+      description: The unique identifier of a single Device.
+      required: true
       schema:
         type: string
         format: uuid
