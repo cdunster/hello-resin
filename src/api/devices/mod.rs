@@ -7,6 +7,7 @@ use uuid::Uuid;
 #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 struct Device {
     name: String,
+    zone_uuid: Option<Uuid>,
 }
 
 type DeviceCollectionState = Mutex<DeviceCollection>;
@@ -30,19 +31,53 @@ impl DeviceCollection {
     fn get_mut(&mut self, uuid: &Uuid) -> Option<&mut Device> {
         self.devices.get_mut(uuid)
     }
+
+    fn get_all_with_zone(&self, zone_uuid: Uuid) -> Option<DeviceCollection> {
+        let mut devices = self.devices.clone();
+        devices.retain(|_, device| device.zone_uuid == Some(zone_uuid));
+        if devices.is_empty() {
+            None
+        } else {
+            Some(DeviceCollection { devices })
+        }
+    }
+}
+
+#[derive(FromForm)]
+struct DeviceQuery {
+    zone_uuid: UUID,
 }
 
 pub fn mount(rocket: Rocket, devices: DeviceCollection) -> Rocket {
     rocket
         .mount(
             "/devices",
-            routes![get_devices, get_device_from_uuid, patch_device_from_uuid,],
+            routes![
+                get_devices,
+                get_devices_with_query,
+                get_device_from_uuid,
+                patch_device_from_uuid,
+            ],
         ).manage(DeviceCollectionState::new(devices))
 }
 
 #[get("/", format = "application/json")]
 fn get_devices(devices: State<DeviceCollectionState>) -> Json {
     Json(json!(devices.inner()))
+}
+
+#[get("/?<device_query>", format = "application/json")]
+fn get_devices_with_query(
+    device_query: DeviceQuery,
+    devices: State<DeviceCollectionState>,
+) -> Option<Json<DeviceCollection>> {
+    let devices = devices.lock().unwrap();
+    let devices = devices.get_all_with_zone(device_query.zone_uuid.into_inner());
+    if let Some(devices) = devices {
+        Some(Json(devices))
+    } else {
+        None
+    }
 }
 
 #[get("/<uuid>", format = "application/json")]
