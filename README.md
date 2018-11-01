@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.com/cdunster/smart-home.svg?branch=master)](https://travis-ci.com/cdunster/smart-home)
+|master     |development|
+|-----------|-----------|
+|[![Build Status](https://travis-ci.com/cdunster/smart-home.svg?branch=master)](https://travis-ci.com/cdunster/smart-home)|[![Build Status](https://travis-ci.com/cdunster/smart-home.svg?branch=development)](https://travis-ci.com/cdunster/smart-home)|
 
 Simple project to try Rust, resin.io, and other things.
 
