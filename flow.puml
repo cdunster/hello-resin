@@ -1,0 +1,19 @@
+@startuml System Overview
+actor user
+box "System"
+    participant api
+    participant hal
+end box
+entity device
+
+group Add New Device
+    user -> api: POST device
+    api -> hal: Add device
+    user -> device: Search for network
+    hal -> device: Interrogate device
+    device --> hal: OK
+    hal --> api: Device added
+    api --> user: (204) Device added
+end
+
+@enduml
