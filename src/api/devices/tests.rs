@@ -1,7 +1,8 @@
 use super::*;
 use rocket::http::{ContentType, Status};
 use rocket::local::{Client, LocalResponse};
-use rocket_contrib::Json;
+use rocket_contrib::{Json, Value};
+use serde_json::map::Values;
 use uuid::Uuid;
 
 fn create_client_with_mounts(devices: DeviceCollection) -> Client {
@@ -315,5 +316,113 @@ mod patch_device {
             }
         })).to_string();
         assert_eq!(expected, body);
+    }
+}
+
+mod post_device {
+    use super::*;
+
+    fn post_device_return_response<'c>(client: &'c Client, device: &Device) -> LocalResponse<'c> {
+        client
+            .post("/devices")
+            .body(Json(json!(device)).to_string())
+            .header(ContentType::JSON)
+            .dispatch()
+    }
+
+    #[test]
+    fn returns_201_response() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let name = "Living Room".to_string();
+        let device = Device::new(name, None);
+
+        let response = post_device_return_response(&client, &device);
+
+        assert_eq!(Status::Created, response.status());
+    }
+
+    #[test]
+    fn response_contains_new_device_uri() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let name = "Living Room".to_string();
+        let device = Device::new(name, None);
+
+        let response = post_device_return_response(&client, &device);
+        let mut response_uri = response.headers().get_one("Location").unwrap().to_string();
+
+        let new_uuid = response_uri.split_off("/devices/".len());
+        let new_uuid = Uuid::parse_str(&new_uuid);
+
+        assert_eq!("/devices/", response_uri);
+        assert!(new_uuid.is_ok());
+    }
+
+    #[test]
+    fn response_body_contains_new_device() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let name = "Living Room".to_string();
+        let device = Device::new(name.clone(), None);
+
+        let mut response = post_device_return_response(&client, &device);
+        println!("{:?}", response);
+        let body = response.body_string().unwrap();
+
+        let expected = Json(json!({ "name": name, "zone_uuid": null })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    fn get_device_with_name<'z>(name: &str, devices: &'z mut Values) -> Option<&'z Value> {
+        devices
+            .inspect(|&device| println!("Found device: {}", device))
+            .find(|&device| device.get("name").unwrap() == name)
+    }
+
+    #[test]
+    fn adds_device() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let name = "Living Room".to_string();
+        let device = Device::new(name.clone(), None);
+
+        post_device_return_response(&client, &device);
+
+        let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let body: Value = serde_json::from_str(&body).unwrap();
+        let mut devices = body["devices"].as_object().unwrap().values();
+
+        let device = get_device_with_name(&name, &mut devices);
+
+        assert!(device.is_some());
+    }
+
+    #[test]
+    fn can_add_more_than_one_device() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let device1_name = "Bathroom".to_string();
+        let device2_name = "Study".to_string();
+        let device1 = Device::new(device1_name.clone(), None);
+        let device2 = Device::new(device2_name.clone(), None);
+
+        post_device_return_response(&client, &device1);
+        post_device_return_response(&client, &device2);
+
+        let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let body: Value = serde_json::from_str(&body).unwrap();
+
+        let mut devices = body["devices"].as_object().unwrap().values();
+        let device = get_device_with_name(&device1_name, &mut devices);
+        assert!(device.is_some());
+
+        let mut devices = body["devices"].as_object().unwrap().values();
+        let device = get_device_with_name(&device2_name, &mut devices);
+        assert!(device.is_some());
     }
 }

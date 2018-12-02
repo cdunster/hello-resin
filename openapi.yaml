@@ -92,6 +92,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/Devices"
 
+    post:
+      tags:
+        - Devices
+      summary: Add a new Device to the list of Devices.
+      requestBody:
+        description: The new Device to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Device"
+      responses:
+        201:
+          description: CREATED - Empty response body.
+
   /devices?zone_uuid={zone_uuid}:
     get:
       tags:

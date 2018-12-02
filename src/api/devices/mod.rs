@@ -1,7 +1,9 @@
 use device::{Device, DeviceCollection};
+use rocket::response::status;
 use rocket::{Rocket, State};
 use rocket_contrib::{Json, UUID};
 use std::sync::Mutex;
+use uuid::Uuid;
 
 type DeviceCollectionState = Mutex<DeviceCollection>;
 
@@ -19,6 +21,7 @@ pub fn mount(rocket: Rocket, devices: DeviceCollection) -> Rocket {
                 get_devices_with_query,
                 get_device_from_uuid,
                 patch_device_from_uuid,
+                post_device
             ],
         ).manage(DeviceCollectionState::new(devices))
 }
@@ -26,6 +29,15 @@ pub fn mount(rocket: Rocket, devices: DeviceCollection) -> Rocket {
 #[get("/", format = "application/json")]
 fn get_devices(devices: State<DeviceCollectionState>) -> Json {
     Json(json!(devices.inner()))
+}
+
+#[post("/", data = "<device>", format = "application/json")]
+fn post_device(device: Json<Device>, devices: State<DeviceCollectionState>) -> status::Created<Json<Device>> {
+    let mut devices = devices.lock().unwrap();
+    let uuid = Uuid::new_v4();
+    devices.add(uuid, device.clone());
+
+    status::Created(format!("/devices/{}", uuid), Some(device))
 }
 
 #[get("/?<device_query>", format = "application/json")]
