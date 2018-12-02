@@ -1,47 +1,9 @@
+use device::{Device, DeviceCollection};
 use rocket::{Rocket, State};
 use rocket_contrib::{Json, UUID};
-use std::collections::HashMap;
 use std::sync::Mutex;
-use uuid::Uuid;
-
-#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
-struct Device {
-    name: String,
-    zone_uuid: Option<Uuid>,
-}
 
 type DeviceCollectionState = Mutex<DeviceCollection>;
-
-#[derive(Serialize)]
-pub struct DeviceCollection {
-    devices: HashMap<Uuid, Device>,
-}
-
-impl DeviceCollection {
-    pub fn new() -> DeviceCollection {
-        DeviceCollection {
-            devices: HashMap::new(),
-        }
-    }
-
-    fn get(&self, uuid: &Uuid) -> Option<&Device> {
-        self.devices.get(uuid)
-    }
-
-    fn get_mut(&mut self, uuid: &Uuid) -> Option<&mut Device> {
-        self.devices.get_mut(uuid)
-    }
-
-    fn get_all_with_zone(&self, zone_uuid: Uuid) -> Option<DeviceCollection> {
-        let mut devices = self.devices.clone();
-        devices.retain(|_, device| device.zone_uuid == Some(zone_uuid));
-        if devices.is_empty() {
-            None
-        } else {
-            Some(DeviceCollection { devices })
-        }
-    }
-}
 
 #[derive(FromForm)]
 struct DeviceQuery {
@@ -93,7 +55,7 @@ fn get_device_from_uuid(uuid: UUID, devices: State<DeviceCollectionState>) -> Op
 fn patch_device_from_uuid(uuid: UUID, patch_json: Json, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
     if let Some(device) = devices.lock().unwrap().get_mut(&uuid.into_inner()) {
         if let Some(patch_name) = patch_json["name"].as_str() {
-            device.name = patch_name.to_string().clone();
+            device.set_name(patch_name);
         }
         Some(Json(device.clone()))
     } else {

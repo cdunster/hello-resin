@@ -2,6 +2,7 @@ use super::*;
 use rocket::http::{ContentType, Status};
 use rocket::local::{Client, LocalResponse};
 use rocket_contrib::Json;
+use uuid::Uuid;
 
 fn create_client_with_mounts(devices: DeviceCollection) -> Client {
     let rocket = rocket::ignite();
@@ -42,27 +43,15 @@ mod get_devices {
 
     #[test]
     fn with_devices_returns_json_object_with_uuids_mapped_to_devices() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device1_name = "Device Name";
-        let device2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device2_name = "Different Name";
-        devices_map.insert(
-            Uuid::parse_str(device1_uuid).unwrap(),
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-        devices_map.insert(
-            Uuid::parse_str(device2_uuid).unwrap(),
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-
-        let devices = DeviceCollection { devices: devices_map };
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name".to_string();
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name".to_string();
+        let mut devices = DeviceCollection::new();
+        let device1 = Device::new(device1_name.clone(), None);
+        let device2 = Device::new(device2_name.clone(), None);
+        devices.add(device1_uuid, device1);
+        devices.add(device2_uuid, device2);
 
         let client = create_client_with_mounts(devices);
 
@@ -71,11 +60,11 @@ mod get_devices {
 
         let expected = Json(json!({
             "devices": {
-                device1_uuid: {
+                device1_uuid.to_string(): {
                     "name": device1_name,
                     "zone_uuid": null
                 },
-                device2_uuid: {
+                device2_uuid.to_string(): {
                     "name": device2_name,
                     "zone_uuid": null
                 }
@@ -86,36 +75,23 @@ mod get_devices {
 
     #[test]
     fn with_devices_and_valid_query_returns_correct_devices() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device1_name = "Device Name";
-        let device1_zone = "c00727d8-eee8-4a0e-850e-b81a74440e78";
-        let device2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device2_name = "Different Name";
-        let device2_zone = "92024abf-6f13-4e6f-b519-0176a16e4ee0";
-        devices_map.insert(
-            Uuid::parse_str(device1_uuid).unwrap(),
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device1_zone).unwrap()),
-            },
-        );
-        devices_map.insert(
-            Uuid::parse_str(device2_uuid).unwrap(),
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device2_zone).unwrap()),
-            },
-        );
-        let devices = DeviceCollection { devices: devices_map };
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name".to_string();
+        let device1_zone = Uuid::parse_str("c00727d8-eee8-4a0e-850e-b81a74440e78").unwrap();
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name".to_string();
+        let device2_zone = Uuid::parse_str("92024abf-6f13-4e6f-b519-0176a16e4ee0").unwrap();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name, Some(device1_zone)));
+        devices.add(device2_uuid, Device::new(device2_name.clone(), Some(device2_zone)));
         let client = create_client_with_mounts(devices);
 
-        let mut response = get_devices_with_query_return_response(&client, device2_zone);
+        let mut response = get_devices_with_query_return_response(&client, &device2_zone.to_string());
         let body = response.body_string().unwrap();
 
         let expected = Json(json!({
             "devices": {
-                device2_uuid: {
+                device2_uuid.to_string(): {
                     "name": device2_name,
                     "zone_uuid": device2_zone
                 }
@@ -126,28 +102,15 @@ mod get_devices {
 
     #[test]
     fn with_devices_but_invalid_query_returns_404_error() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device1_name = "Device Name";
-        let device1_zone = "c00727d8-eee8-4a0e-850e-b81a74440e78";
-        let device2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device2_name = "Different Name";
-        let device2_zone = "92024abf-6f13-4e6f-b519-0176a16e4ee0";
-        devices_map.insert(
-            Uuid::parse_str(device1_uuid).unwrap(),
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device1_zone).unwrap()),
-            },
-        );
-        devices_map.insert(
-            Uuid::parse_str(device2_uuid).unwrap(),
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device2_zone).unwrap()),
-            },
-        );
-        let devices = DeviceCollection { devices: devices_map };
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name".to_string();
+        let device1_zone = Uuid::parse_str("c00727d8-eee8-4a0e-850e-b81a74440e78").unwrap();
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name".to_string();
+        let device2_zone = Uuid::parse_str("92024abf-6f13-4e6f-b519-0176a16e4ee0").unwrap();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name, Some(device1_zone)));
+        devices.add(device2_uuid, Device::new(device2_name, Some(device2_zone)));
         let client = create_client_with_mounts(devices);
 
         let zone_uuid = "690ad0c5-a04f-479f-9d1f-d076df3a2c7b";
@@ -169,41 +132,28 @@ mod get_devices {
 
     #[test]
     fn with_devices_and_valid_query_does_not_remove_devices() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device1_name = "Device Name";
-        let device1_zone = "c00727d8-eee8-4a0e-850e-b81a74440e78";
-        let device2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device2_name = "Different Name";
-        let device2_zone = "92024abf-6f13-4e6f-b519-0176a16e4ee0";
-        devices_map.insert(
-            Uuid::parse_str(device1_uuid).unwrap(),
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device1_zone).unwrap()),
-            },
-        );
-        devices_map.insert(
-            Uuid::parse_str(device2_uuid).unwrap(),
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: Some(Uuid::parse_str(device2_zone).unwrap()),
-            },
-        );
-        let devices = DeviceCollection { devices: devices_map };
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name".to_string();
+        let device1_zone = Uuid::parse_str("c00727d8-eee8-4a0e-850e-b81a74440e78").unwrap();
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name".to_string();
+        let device2_zone = Uuid::parse_str("92024abf-6f13-4e6f-b519-0176a16e4ee0").unwrap();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.clone(), Some(device1_zone)));
+        devices.add(device2_uuid, Device::new(device2_name.clone(), Some(device2_zone)));
         let client = create_client_with_mounts(devices);
 
-        get_devices_with_query_return_response(&client, device2_zone);
+        get_devices_with_query_return_response(&client, &device2_zone.to_string());
         let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
 
         let expected = Json(json!({
             "devices": {
-                device1_uuid: {
+                device1_uuid.to_string(): {
                     "name": device1_name,
                     "zone_uuid": device1_zone
                 },
-                device2_uuid: {
+                device2_uuid.to_string(): {
                     "name": device2_name,
                     "zone_uuid": device2_zone
                 }
@@ -225,22 +175,14 @@ mod get_device {
 
     #[test]
     fn with_valid_uuid_returns_correct_json_device_object() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device_name = "Device Name";
-        devices_map.insert(
-            Uuid::parse_str(device_uuid).unwrap(),
-            Device {
-                name: device_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-
-        let devices = DeviceCollection { devices: devices_map };
+        let device_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device_name = "Device Name".to_string();
+        let mut devices = DeviceCollection::new();
+        devices.add(device_uuid, Device::new(device_name.clone(), None));
 
         let client = create_client_with_mounts(devices);
 
-        let body = get_device_return_response_body_string(&client, device_uuid);
+        let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
         let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
         assert_eq!(expected, body);
@@ -248,31 +190,17 @@ mod get_device {
 
     #[test]
     fn multiple_devices_returns_correct_json_device_object_each_time() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device1_name = "Device Name";
-        let device2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device2_name = "Different Name";
-        devices_map.insert(
-            Uuid::parse_str(device1_uuid).unwrap(),
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-        devices_map.insert(
-            Uuid::parse_str(device2_uuid).unwrap(),
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-
-        let devices = DeviceCollection { devices: devices_map };
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name".to_string();
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name".to_string();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.clone(), None));
+        devices.add(device2_uuid, Device::new(device2_name.clone(), None));
 
         let client = create_client_with_mounts(devices);
 
-        let body = get_device_return_response_body_string(&client, device1_uuid);
+        let body = get_device_return_response_body_string(&client, &device1_uuid.to_string());
 
         let expected = Json(json!({
             "name": device1_name,
@@ -280,7 +208,7 @@ mod get_device {
             })).to_string();
         assert_eq!(expected, body);
 
-        let body = get_device_return_response_body_string(&client, device2_uuid);
+        let body = get_device_return_response_body_string(&client, &device2_uuid.to_string());
 
         let expected = Json(json!({
             "name": device2_name,
@@ -302,27 +230,19 @@ mod get_device {
 
     #[test]
     fn after_call_device_remains() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
-        let device_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
-        let device_name = "Device Name";
-        devices_map.insert(
-            Uuid::parse_str(device_uuid).unwrap(),
-            Device {
-                name: device_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-
-        let devices = DeviceCollection { devices: devices_map };
+        let device_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device_name = "Device Name".to_string();
+        let mut devices = DeviceCollection::new();
+        devices.add(device_uuid, Device::new(device_name.clone(), None));
 
         let client = create_client_with_mounts(devices);
 
-        let body = get_device_return_response_body_string(&client, device_uuid);
+        let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
         let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
         assert_eq!(expected, body);
 
-        let body = get_device_return_response_body_string(&client, device_uuid);
+        let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
         let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
         assert_eq!(expected, body);
@@ -343,27 +263,13 @@ mod patch_device {
 
     #[test]
     fn returns_updated_device() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
         let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let device1_name = "Device Name";
         let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let device2_name = "Different Name";
-        devices_map.insert(
-            device1_uuid,
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-        devices_map.insert(
-            device2_uuid,
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-
-        let devices = DeviceCollection { devices: devices_map };
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.to_string(), None));
+        devices.add(device2_uuid, Device::new(device2_name.to_string(), None));
 
         let client = create_client_with_mounts(devices);
 
@@ -372,36 +278,20 @@ mod patch_device {
         let mut response = patch_device_return_response(&client, device1_uuid, patch_json);
 
         let returned_device: Device = serde_json::from_str(&response.body_string().unwrap()).unwrap();
-        let expected_device = Device {
-            name: patched_name,
-            zone_uuid: None,
-        };
+        let expected_device = Device::new(patched_name, None);
 
         assert_eq!(expected_device, returned_device);
     }
     #[test]
     fn updates_device_collection() {
-        let mut devices_map: HashMap<Uuid, Device> = HashMap::new();
         let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let device1_name = "Device Name";
         let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let device2_name = "Different Name";
-        devices_map.insert(
-            device1_uuid,
-            Device {
-                name: device1_name.to_string(),
-                zone_uuid: None,
-            },
-        );
-        devices_map.insert(
-            device2_uuid,
-            Device {
-                name: device2_name.to_string(),
-                zone_uuid: None,
-            },
-        );
 
-        let devices = DeviceCollection { devices: devices_map };
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.to_string(), None));
+        devices.add(device2_uuid, Device::new(device2_name.to_string(), None));
 
         let client = create_client_with_mounts(devices);
 

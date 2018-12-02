@@ -11,10 +11,11 @@ extern crate serde_derive;
 extern crate uuid;
 
 mod api;
+mod device;
 
 fn main() {
     let zones = api::zones::ZoneCollection::new();
-    let devices = api::devices::DeviceCollection::new();
+    let devices = device::DeviceCollection::new();
 
     let rocket = rocket::ignite();
     let rocket = api::mount(rocket);
