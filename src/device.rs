@@ -15,6 +15,10 @@ impl Device {
     pub fn set_name(&mut self, name: &str) {
         self.name = name.to_string();
     }
+
+    pub fn set_zone_uuid(&mut self, zone_uuid: Option<Uuid>) {
+        self.zone_uuid = zone_uuid;
+    }
 }
 
 #[derive(Serialize)]

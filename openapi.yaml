@@ -218,6 +218,11 @@ components:
           uniqueItems: true
           maxLength: 24
           example: STRV
+        zone_uuid:
+          type: string
+          format: uuid
+          description: The unique identifier for the Zone the device belongs to.
+          example: "8a70d6f5-a877-4331-8f15-0f20e4d34c0f"
 
     Devices:
       type: object
@@ -227,5 +232,10 @@ components:
           additionalProperties:
             $ref: "#components/schemas/Device"
           example:
-            "56fd8e82-d260-46df-809f-662f070e9e1e": { "name": STRV }
-            "4edf5992-8511-4587-a118-b8d53473da0c": { "name": Main Light }
+            "56fd8e82-d260-46df-809f-662f070e9e1e":
+              {
+                "name": STRV,
+                "zone_uuid": "8a70d6f5-a877-4331-8f15-0f20e4d34c0f",
+              }
+            "4edf5992-8511-4587-a118-b8d53473da0c":
+              { "name": Main Light, "zone_uuid": null }

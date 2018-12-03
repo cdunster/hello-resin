@@ -69,6 +69,10 @@ fn patch_device_from_uuid(uuid: UUID, patch_json: Json, devices: State<DeviceCol
         if let Some(patch_name) = patch_json["name"].as_str() {
             device.set_name(patch_name);
         }
+        if let Some(patch_zone_uuid) = patch_json["zone_uuid"].as_str() {
+            let uuid = Uuid::parse_str(patch_zone_uuid).unwrap();
+            device.set_zone_uuid(Some(uuid));
+        }
         Some(Json(device.clone()))
     } else {
         None
