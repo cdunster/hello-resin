@@ -1,47 +1,11 @@
 use rocket::response::status;
 use rocket::{Rocket, State};
 use rocket_contrib::{Json, UUID};
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
 use std::sync::Mutex;
 use uuid::Uuid;
-
-#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
-struct Zone {
-    name: String,
-}
+use zone::{Zone, ZoneCollection};
 
 type ZoneCollectionState = Mutex<ZoneCollection>;
-
-#[derive(Serialize)]
-pub struct ZoneCollection {
-    zones: HashMap<Uuid, Zone>,
-}
-
-impl ZoneCollection {
-    pub fn new() -> ZoneCollection {
-        ZoneCollection { zones: HashMap::new() }
-    }
-
-    fn add(&mut self, zone: Zone) -> Entry<Uuid, Zone> {
-        let uuid = Uuid::new_v4();
-        self.zones.insert(uuid, zone);
-
-        self.zones.entry(uuid)
-    }
-
-    fn get(&self, uuid: &Uuid) -> Option<&Zone> {
-        self.zones.get(uuid)
-    }
-
-    fn get_mut(&mut self, uuid: &Uuid) -> Option<&mut Zone> {
-        self.zones.get_mut(uuid)
-    }
-
-    fn remove(&mut self, uuid: &Uuid) {
-        self.zones.remove(uuid);
-    }
-}
 
 pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
     rocket
@@ -65,9 +29,10 @@ fn get_zones(zones: State<ZoneCollectionState>) -> Json {
 #[post("/", format = "application/json", data = "<zone>")]
 fn post_zones(zone: Json<Zone>, zones: State<ZoneCollectionState>) -> status::Created<Json<Zone>> {
     let mut zones = zones.lock().unwrap();
-    let zone_entry = zones.add(zone.clone());
+    let uuid = Uuid::new_v4();
+    zones.add(uuid, zone.clone());
 
-    status::Created(format!("/zones/{}", zone_entry.key()), Some(zone))
+    status::Created(format!("/zones/{}", uuid), Some(zone))
 }
 
 #[get("/<uuid>", format = "application/json")]
@@ -83,7 +48,7 @@ fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<J
 fn patch_zone_from_uuid(uuid: UUID, patch_json: Json, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get_mut(&uuid.into_inner()) {
         if let Some(patch_name) = patch_json["name"].as_str() {
-            zone.name = patch_name.to_string().clone();
+            zone.set_name(patch_name.to_string().clone());
         }
         Some(Json(zone.clone()))
     } else {

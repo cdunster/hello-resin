@@ -12,9 +12,10 @@ extern crate uuid;
 
 mod api;
 mod device;
+mod zone;
 
 fn main() {
-    let zones = api::zones::ZoneCollection::new();
+    let zones = zone::ZoneCollection::new();
     let devices = device::DeviceCollection::new();
 
     let rocket = rocket::ignite();

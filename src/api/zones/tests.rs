@@ -3,6 +3,7 @@ use rocket::http::{ContentType, Status};
 use rocket::local::{Client, LocalResponse};
 use rocket_contrib::{Json, Value};
 use serde_json::map::Values;
+use uuid::Uuid;
 
 fn create_client_with_mounts(zones: ZoneCollection) -> Client {
     let rocket = rocket::ignite();
@@ -36,26 +37,13 @@ mod get_zones {
 
     #[test]
     fn with_zones_returns_json_object_with_uuids_mapped_to_zones() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
-        let zone1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
-        let zone2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone2_name = "Different Name";
-        zones_map.insert(
-            Uuid::parse_str(zone1_uuid).unwrap(),
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            Uuid::parse_str(zone2_uuid).unwrap(),
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name.to_string()));
+        zones.add(zone2_uuid, Zone::new(zone2_name.to_string()));
         let client = create_client_with_mounts(zones);
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
@@ -63,10 +51,10 @@ mod get_zones {
 
         let expected = Json(json!({
             "zones": {
-                zone1_uuid: {
+                zone1_uuid.to_string(): {
                     "name": zone1_name
                 },
-                zone2_uuid: {
+                zone2_uuid.to_string(): {
                     "name": zone2_name
                 }
             }
@@ -87,21 +75,13 @@ mod get_zone {
 
     #[test]
     fn with_valid_uuid_returns_correct_json_zone_object() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
-        let zone_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone_name = "Zone Name";
-        zones_map.insert(
-            Uuid::parse_str(zone_uuid).unwrap(),
-            Zone {
-                name: zone_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let mut zones = ZoneCollection::new();
+        zones.add(zone_uuid, Zone::new(zone_name.to_string()));
         let client = create_client_with_mounts(zones);
 
-        let body = get_zone_return_response_body_string(&client, zone_uuid);
+        let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
         let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
@@ -109,34 +89,21 @@ mod get_zone {
 
     #[test]
     fn multiple_zones_returns_correct_json_zone_object_each_time() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
-        let zone1_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
-        let zone2_uuid = "88f573e2-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone2_name = "Different Name";
-        zones_map.insert(
-            Uuid::parse_str(zone1_uuid).unwrap(),
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            Uuid::parse_str(zone2_uuid).unwrap(),
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name.to_string()));
+        zones.add(zone2_uuid, Zone::new(zone2_name.to_string()));
         let client = create_client_with_mounts(zones);
 
-        let body = get_zone_return_response_body_string(&client, zone1_uuid);
+        let body = get_zone_return_response_body_string(&client, &zone1_uuid.to_string());
 
         let expected = Json(json!({ "name": zone1_name })).to_string();
         assert_eq!(expected, body);
 
-        let body = get_zone_return_response_body_string(&client, zone2_uuid);
+        let body = get_zone_return_response_body_string(&client, &zone2_uuid.to_string());
 
         let expected = Json(json!({ "name": zone2_name })).to_string();
         assert_eq!(expected, body);
@@ -155,26 +122,18 @@ mod get_zone {
 
     #[test]
     fn after_call_zone_remains() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
-        let zone_uuid = "84fa1356-d5de-11e8-9f8b-f2801f1b9fd1";
+        let zone_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone_name = "Zone Name";
-        zones_map.insert(
-            Uuid::parse_str(zone_uuid).unwrap(),
-            Zone {
-                name: zone_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let mut zones = ZoneCollection::new();
+        zones.add(zone_uuid, Zone::new(zone_name.to_string()));
         let client = create_client_with_mounts(zones);
 
-        let body = get_zone_return_response_body_string(&client, zone_uuid);
+        let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
         let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
 
-        let body = get_zone_return_response_body_string(&client, zone_uuid);
+        let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
         let expected = Json(json!({ "name": zone_name })).to_string();
         assert_eq!(expected, body);
@@ -198,7 +157,7 @@ mod post_zone {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
-        let zone = Zone { name: name.to_string() };
+        let zone = Zone::new(name.to_string());
 
         let response = post_zone_return_response(&client, &zone);
 
@@ -210,7 +169,7 @@ mod post_zone {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
-        let zone = Zone { name: name.to_string() };
+        let zone = Zone::new(name.to_string());
 
         let response = post_zone_return_response(&client, &zone);
         let mut response_uri = response.headers().get_one("Location").unwrap().to_string();
@@ -227,13 +186,13 @@ mod post_zone {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
-        let zone = Zone { name: name.to_string() };
+        let zone = Zone::new(name.to_string());
 
         let mut response = post_zone_return_response(&client, &zone);
         println!("{:?}", response);
         let body = response.body_string().unwrap();
 
-        let expected = Json(json!({ "name": zone.name })).to_string();
+        let expected = Json(json!({ "name": name })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -248,7 +207,7 @@ mod post_zone {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
         let name = "Living Room";
-        let zone = Zone { name: name.to_string() };
+        let zone = Zone::new(name.to_string());
 
         post_zone_return_response(&client, &zone);
 
@@ -267,12 +226,10 @@ mod post_zone {
     fn can_add_more_than_one_zone() {
         let zones = ZoneCollection::new();
         let client = create_client_with_mounts(zones);
-        let zone1 = Zone {
-            name: "Bathroom".to_string(),
-        };
-        let zone2 = Zone {
-            name: "Study".to_string(),
-        };
+        let zone1_name = "Bathroom";
+        let zone2_name = "Study";
+        let zone1 = Zone::new(zone1_name.to_string());
+        let zone2 = Zone::new(zone2_name.to_string());
 
         post_zone_return_response(&client, &zone1);
         post_zone_return_response(&client, &zone2);
@@ -283,11 +240,11 @@ mod post_zone {
         let body: Value = serde_json::from_str(&body).unwrap();
 
         let mut zones = body["zones"].as_object().unwrap().values();
-        let zone = get_zone_with_name(&zone1.name, &mut zones);
+        let zone = get_zone_with_name(zone1_name, &mut zones);
         assert!(zone.is_some());
 
         let mut zones = body["zones"].as_object().unwrap().values();
-        let zone = get_zone_with_name(&zone2.name, &mut zones);
+        let zone = get_zone_with_name(zone2_name, &mut zones);
         assert!(zone.is_some());
     }
 }
@@ -305,26 +262,13 @@ mod patch_zone {
 
     #[test]
     fn returns_updated_zone() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
-        let zone1_name = "Zone Name";
+        let zone1_name = "Zone Name".to_string();
         let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
-        let zone2_name = "Different Name";
-        zones_map.insert(
-            zone1_uuid,
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            zone2_uuid,
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let zone2_name = "Different Name".to_string();
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name));
+        zones.add(zone2_uuid, Zone::new(zone2_name));
         let client = create_client_with_mounts(zones);
 
         let patched_name = "New zone name".to_string();
@@ -332,32 +276,19 @@ mod patch_zone {
         let mut response = patch_zone_return_response(&client, zone1_uuid, patch_json);
 
         let returned_zone: Zone = serde_json::from_str(&response.body_string().unwrap()).unwrap();
-        let expected_zone = Zone { name: patched_name };
+        let expected_zone = Zone::new(patched_name);
 
         assert_eq!(expected_zone, returned_zone);
     }
     #[test]
     fn updates_zone_collection() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
         let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone2_name = "Different Name";
-        zones_map.insert(
-            zone1_uuid,
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            zone2_uuid,
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-
-        let zones = ZoneCollection { zones: zones_map };
-
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name.to_string()));
+        zones.add(zone2_uuid, Zone::new(zone2_name.to_string()));
         let client = create_client_with_mounts(zones);
 
         let patched_name = "New zone name".to_string();
@@ -393,24 +324,13 @@ mod delete_zone {
 
     #[test]
     fn with_zone_returns_204_no_content() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
-        let zone1_name = "Zone Name";
+        let zone1_name = "Zone Name".to_string();
         let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
-        let zone2_name = "Different Name";
-        zones_map.insert(
-            zone1_uuid,
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            zone2_uuid,
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-        let zones = ZoneCollection { zones: zones_map };
+        let zone2_name = "Different Name".to_string();
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name));
+        zones.add(zone2_uuid, Zone::new(zone2_name));
         let client = create_client_with_mounts(zones);
 
         let response = delete_zone_return_response(&client, zone1_uuid);
@@ -420,24 +340,13 @@ mod delete_zone {
 
     #[test]
     fn zone_deleted() {
-        let mut zones_map: HashMap<Uuid, Zone> = HashMap::new();
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
         let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone2_name = "Different Name";
-        zones_map.insert(
-            zone1_uuid,
-            Zone {
-                name: zone1_name.to_string(),
-            },
-        );
-        zones_map.insert(
-            zone2_uuid,
-            Zone {
-                name: zone2_name.to_string(),
-            },
-        );
-        let zones = ZoneCollection { zones: zones_map };
+        let mut zones = ZoneCollection::new();
+        zones.add(zone1_uuid, Zone::new(zone1_name.to_string()));
+        zones.add(zone2_uuid, Zone::new(zone2_name.to_string()));
         let client = create_client_with_mounts(zones);
 
         delete_zone_return_response(&client, zone1_uuid);
