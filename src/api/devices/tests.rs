@@ -275,14 +275,16 @@ mod patch_device {
         let client = create_client_with_mounts(devices);
 
         let patched_name = "New device name".to_string();
-        let patch_json = Json(json!({ "name": patched_name }));
+        let patched_zone_uuid = Uuid::parse_str("b098d5ca-1311-4145-80b2-0e9b2944efd3").unwrap();
+        let patch_json = Json(json!({ "name": patched_name, "zone_uuid": patched_zone_uuid }));
         let mut response = patch_device_return_response(&client, device1_uuid, patch_json);
 
         let returned_device: Device = serde_json::from_str(&response.body_string().unwrap()).unwrap();
-        let expected_device = Device::new(patched_name, None);
+        let expected_device = Device::new(patched_name, Some(patched_zone_uuid));
 
         assert_eq!(expected_device, returned_device);
     }
+
     #[test]
     fn updates_device_collection() {
         let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
