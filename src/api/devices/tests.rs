@@ -485,4 +485,25 @@ mod post_device {
         let device = get_device_with_name(&device2_name, &mut devices);
         assert!(device.is_some());
     }
+
+    #[test]
+    fn device_not_added_when_name_missing() {
+        let devices = DeviceCollection::new();
+        let client = create_client_with_mounts(devices);
+        let zone_uuid = Uuid::parse_str("92024abf-6f13-4e6f-b519-0176a16e4ee0").unwrap();
+
+        client
+            .post("/devices")
+            .body(Json(json!({ "zone_uuid": zone_uuid })).to_string())
+            .header(ContentType::JSON)
+            .dispatch();
+
+        let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let body: Value = serde_json::from_str(&body).unwrap();
+        let devices = body["devices"].as_object().unwrap();
+
+        assert!(devices.is_empty());
+    }
 }
