@@ -63,16 +63,29 @@ fn get_device_from_uuid(uuid: UUID, devices: State<DeviceCollectionState>) -> Op
     }
 }
 
-#[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
-fn patch_device_from_uuid(uuid: UUID, patch_json: Json, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
-    if let Some(device) = devices.lock().unwrap().get_mut(&uuid.into_inner()) {
+fn patch_device_with_json(device: &mut Device, patch_json: &Json) {
+    let patch_json = patch_json.as_object().unwrap();
+
+    if patch_json.contains_key("name") {
         if let Some(patch_name) = patch_json["name"].as_str() {
             device.set_name(patch_name);
         }
+    }
+
+    if patch_json.contains_key("zone_uuid") {
         if let Some(patch_zone_uuid) = patch_json["zone_uuid"].as_str() {
             let uuid = Uuid::parse_str(patch_zone_uuid).unwrap();
             device.set_zone_uuid(Some(uuid));
+        } else {
+            device.set_zone_uuid(None);
         }
+    }
+}
+
+#[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
+fn patch_device_from_uuid(uuid: UUID, patch_json: Json, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
+    if let Some(device) = devices.lock().unwrap().get_mut(&uuid.into_inner()) {
+        patch_device_with_json(device, &patch_json);
         Some(Json(device.clone()))
     } else {
         None

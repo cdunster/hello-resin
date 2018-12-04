@@ -319,6 +319,64 @@ mod patch_device {
         })).to_string();
         assert_eq!(expected, body);
     }
+
+    #[test]
+    fn can_remove_zone_uuid() {
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name";
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name";
+        let zone_uuid = Uuid::parse_str("b098d5ca-1311-4145-80b2-0e9b2944efd3").unwrap();
+
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.to_string(), Some(zone_uuid)));
+        devices.add(device2_uuid, Device::new(device2_name.to_string(), Some(zone_uuid)));
+
+        let client = create_client_with_mounts(devices);
+
+        let patch_json = Json(json!({ "zone_uuid": null }));
+        patch_device_return_response(&client, device1_uuid, patch_json);
+
+        let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
+        let body = response.body_string().unwrap();
+
+        let expected = Json(json!({
+            "devices": {
+                device1_uuid.to_string(): {
+                    "name": device1_name,
+                    "zone_uuid": null
+                },
+                device2_uuid.to_string(): {
+                    "name": device2_name,
+                    "zone_uuid": "b098d5ca-1311-4145-80b2-0e9b2944efd3"
+                }
+            }
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn can_partial_patch_name_only() {
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name";
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name";
+        let zone_uuid = Uuid::parse_str("b098d5ca-1311-4145-80b2-0e9b2944efd3").unwrap();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.to_string(), Some(zone_uuid)));
+        devices.add(device2_uuid, Device::new(device2_name.to_string(), None));
+
+        let client = create_client_with_mounts(devices);
+
+        let patched_name = "New device name".to_string();
+        let patch_json = Json(json!({ "name": patched_name }));
+        let mut response = patch_device_return_response(&client, device1_uuid, patch_json);
+
+        let returned_device: Device = serde_json::from_str(&response.body_string().unwrap()).unwrap();
+        let expected_device = Device::new(patched_name, Some(zone_uuid));
+
+        assert_eq!(expected_device, returned_device);
+    }
 }
 
 mod post_device {
