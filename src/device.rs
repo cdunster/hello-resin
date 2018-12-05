@@ -4,12 +4,17 @@ use uuid::Uuid;
 #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub struct Device {
     name: String,
+    setpoint: f64,
     zone_uuid: Option<Uuid>,
 }
 
 impl Device {
     pub fn new(name: String, zone_uuid: Option<Uuid>) -> Device {
-        Device { name, zone_uuid }
+        Device {
+            name,
+            zone_uuid,
+            setpoint: 16.0,
+        }
     }
 
     pub fn set_name(&mut self, name: &str) {
@@ -18,6 +23,10 @@ impl Device {
 
     pub fn set_zone_uuid(&mut self, zone_uuid: Option<Uuid>) {
         self.zone_uuid = zone_uuid;
+    }
+
+    pub fn set_setpoint(&mut self, setpoint: f64) {
+        self.setpoint = setpoint;
     }
 }
 

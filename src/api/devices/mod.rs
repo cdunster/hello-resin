@@ -80,6 +80,12 @@ fn patch_device_with_json(device: &mut Device, patch_json: &Json) {
             device.set_zone_uuid(None);
         }
     }
+
+    if patch_json.contains_key("setpoint") {
+        if let Some(patch_setpoint) = patch_json["setpoint"].as_f64() {
+            device.set_setpoint(patch_setpoint);
+        }
+    }
 }
 
 #[patch("/<uuid>", format = "application/json", data = "<patch_json>")]

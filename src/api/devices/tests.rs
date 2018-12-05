@@ -63,10 +63,12 @@ mod get_devices {
             "devices": {
                 device1_uuid.to_string(): {
                     "name": device1_name,
+                    "setpoint": 16.0,
                     "zone_uuid": null
                 },
                 device2_uuid.to_string(): {
                     "name": device2_name,
+                    "setpoint": 16.0,
                     "zone_uuid": null
                 }
             }
@@ -94,6 +96,7 @@ mod get_devices {
             "devices": {
                 device2_uuid.to_string(): {
                     "name": device2_name,
+                    "setpoint": 16.0,
                     "zone_uuid": device2_zone
                 }
             }
@@ -152,10 +155,12 @@ mod get_devices {
             "devices": {
                 device1_uuid.to_string(): {
                     "name": device1_name,
+                    "setpoint": 16.0,
                     "zone_uuid": device1_zone
                 },
                 device2_uuid.to_string(): {
                     "name": device2_name,
+                    "setpoint": 16.0,
                     "zone_uuid": device2_zone
                 }
             }
@@ -185,7 +190,11 @@ mod get_device {
 
         let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
-        let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
+        let expected = Json(json!({
+            "name": device_name,
+            "setpoint": 16.0,
+            "zone_uuid": null
+        })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -205,6 +214,7 @@ mod get_device {
 
         let expected = Json(json!({
             "name": device1_name,
+            "setpoint": 16.0,
             "zone_uuid": null
             })).to_string();
         assert_eq!(expected, body);
@@ -213,6 +223,7 @@ mod get_device {
 
         let expected = Json(json!({
             "name": device2_name,
+            "setpoint": 16.0,
             "zone_uuid": null
             })).to_string();
         assert_eq!(expected, body);
@@ -240,12 +251,20 @@ mod get_device {
 
         let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
-        let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
+        let expected = Json(json!({
+            "name": device_name,
+            "setpoint": 16.0,
+            "zone_uuid": null
+        })).to_string();
         assert_eq!(expected, body);
 
         let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
 
-        let expected = Json(json!({ "name": device_name, "zone_uuid": null })).to_string();
+        let expected = Json(json!({
+            "name": device_name,
+            "setpoint": 16.0,
+            "zone_uuid": null
+        })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -309,10 +328,12 @@ mod patch_device {
             "devices": {
                 device1_uuid.to_string(): {
                     "name": patched_name,
+                    "setpoint": 16.0,
                     "zone_uuid": null
                 },
                 device2_uuid.to_string(): {
                     "name": device2_name,
+                    "setpoint": 16.0,
                     "zone_uuid": null
                 }
             }
@@ -344,10 +365,12 @@ mod patch_device {
             "devices": {
                 device1_uuid.to_string(): {
                     "name": device1_name,
+                    "setpoint": 16.0,
                     "zone_uuid": null
                 },
                 device2_uuid.to_string(): {
                     "name": device2_name,
+                    "setpoint": 16.0,
                     "zone_uuid": "b098d5ca-1311-4145-80b2-0e9b2944efd3"
                 }
             }
@@ -376,6 +399,33 @@ mod patch_device {
         let expected_device = Device::new(patched_name, Some(zone_uuid));
 
         assert_eq!(expected_device, returned_device);
+    }
+
+    #[test]
+    fn can_set_setpoint() {
+        let device1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device1_name = "Device Name";
+        let device2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let device2_name = "Different Name";
+        let zone_uuid = Uuid::parse_str("b098d5ca-1311-4145-80b2-0e9b2944efd3").unwrap();
+        let mut devices = DeviceCollection::new();
+        devices.add(device1_uuid, Device::new(device1_name.to_string(), Some(zone_uuid)));
+        devices.add(device2_uuid, Device::new(device2_name.to_string(), None));
+
+        let client = create_client_with_mounts(devices);
+
+        let patch_setpoint = 22.3;
+        let patch_json = Json(json!({ "setpoint": patch_setpoint }));
+        let body = patch_device_return_response(&client, device1_uuid, patch_json)
+            .body_string()
+            .unwrap();
+
+        let expected = Json(json!({
+            "name": device1_name,
+            "setpoint": patch_setpoint,
+            "zone_uuid": zone_uuid
+        })).to_string();
+        assert_eq!(expected, body);
     }
 }
 
@@ -430,7 +480,11 @@ mod post_device {
         println!("{:?}", response);
         let body = response.body_string().unwrap();
 
-        let expected = Json(json!({ "name": name, "zone_uuid": null })).to_string();
+        let expected = Json(json!({
+            "name": name,
+            "setpoint": 16.0,
+            "zone_uuid": null
+        })).to_string();
         assert_eq!(expected, body);
     }
 
