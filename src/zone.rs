@@ -4,15 +4,20 @@ use uuid::Uuid;
 #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub struct Zone {
     name: String,
+    setpoint: f64,
 }
 
 impl Zone {
     pub fn new(name: String) -> Zone {
-        Zone { name }
+        Zone { name, setpoint: 16.0 }
     }
 
     pub fn set_name(&mut self, name: String) {
         self.name = name;
+    }
+
+    pub fn set_setpoint(&mut self, setpoint: f64) {
+        self.setpoint = setpoint;
     }
 }
 

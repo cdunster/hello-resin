@@ -44,12 +44,26 @@ fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<J
     }
 }
 
+fn patch_zone_with_json(zone: &mut Zone, patch_json: &Json) {
+    let patch_json = patch_json.as_object().unwrap();
+
+    if patch_json.contains_key("name") {
+        if let Some(patch_name) = patch_json["name"].as_str() {
+            zone.set_name(patch_name.to_string());
+        }
+    }
+
+    if patch_json.contains_key("setpoint") {
+        if let Some(patch_setpoint) = patch_json["setpoint"].as_f64() {
+            zone.set_setpoint(patch_setpoint);
+        }
+    }
+}
+
 #[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
 fn patch_zone_from_uuid(uuid: UUID, patch_json: Json, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get_mut(&uuid.into_inner()) {
-        if let Some(patch_name) = patch_json["name"].as_str() {
-            zone.set_name(patch_name.to_string().clone());
-        }
+        patch_zone_with_json(zone, &patch_json);
         Some(Json(zone.clone()))
     } else {
         None

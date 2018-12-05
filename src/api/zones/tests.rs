@@ -52,10 +52,12 @@ mod get_zones {
         let expected = Json(json!({
             "zones": {
                 zone1_uuid.to_string(): {
-                    "name": zone1_name
+                    "name": zone1_name,
+                    "setpoint": 16.0
                 },
                 zone2_uuid.to_string(): {
-                    "name": zone2_name
+                    "name": zone2_name,
+                    "setpoint": 16.0
                 }
             }
         })).to_string();
@@ -83,7 +85,7 @@ mod get_zone {
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
-        let expected = Json(json!({ "name": zone_name })).to_string();
+        let expected = Json(json!({ "name": zone_name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -100,12 +102,12 @@ mod get_zone {
 
         let body = get_zone_return_response_body_string(&client, &zone1_uuid.to_string());
 
-        let expected = Json(json!({ "name": zone1_name })).to_string();
+        let expected = Json(json!({ "name": zone1_name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
 
         let body = get_zone_return_response_body_string(&client, &zone2_uuid.to_string());
 
-        let expected = Json(json!({ "name": zone2_name })).to_string();
+        let expected = Json(json!({ "name": zone2_name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -130,12 +132,12 @@ mod get_zone {
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
-        let expected = Json(json!({ "name": zone_name })).to_string();
+        let expected = Json(json!({ "name": zone_name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
 
-        let expected = Json(json!({ "name": zone_name })).to_string();
+        let expected = Json(json!({ "name": zone_name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -192,7 +194,7 @@ mod post_zone {
         println!("{:?}", response);
         let body = response.body_string().unwrap();
 
-        let expected = Json(json!({ "name": name })).to_string();
+        let expected = Json(json!({ "name": name, "setpoint": 16.0 })).to_string();
         assert_eq!(expected, body);
     }
 
@@ -280,6 +282,7 @@ mod patch_zone {
 
         assert_eq!(expected_zone, returned_zone);
     }
+
     #[test]
     fn updates_zone_collection() {
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
@@ -301,12 +304,58 @@ mod patch_zone {
         let expected = Json(json!({
             "zones": {
                 zone1_uuid.to_string(): {
-                    "name": patched_name
+                    "name": patched_name,
+                    "setpoint": 16.0
                 },
                 zone2_uuid.to_string(): {
-                    "name": zone2_name
+                    "name": zone2_name,
+                    "setpoint": 16.0
                 }
             }
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn change_name_only() {
+        let zone_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let zone_name = "Zone Name".to_string();
+        let mut zones = ZoneCollection::new();
+        zones.add(zone_uuid, Zone::new(zone_name));
+        let client = create_client_with_mounts(zones);
+
+        let patched_name = "New zone name".to_string();
+        let patch_json = Json(json!({ "name": patched_name }));
+        let body = patch_zone_return_response(&client, zone_uuid, patch_json)
+            .body_string()
+            .unwrap();
+
+        let expected = Json(json!({
+                "name": patched_name,
+                "setpoint": 16.0
+        })).to_string();
+        assert_eq!(expected, body);
+    }
+
+    #[test]
+    fn change_setpoint_only() {
+        let zone_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
+        let zone_name = "Zone Name".to_string();
+        let mut zone = Zone::new(zone_name.clone());
+        zone.set_setpoint(32.0);
+        let mut zones = ZoneCollection::new();
+        zones.add(zone_uuid, zone);
+        let client = create_client_with_mounts(zones);
+
+        let patch_setpoint = 56.42;
+        let patch_json = Json(json!({ "setpoint": patch_setpoint }));
+        let body = patch_zone_return_response(&client, zone_uuid, patch_json)
+            .body_string()
+            .unwrap();
+
+        let expected = Json(json!({
+                "name": zone_name,
+                "setpoint": patch_setpoint
         })).to_string();
         assert_eq!(expected, body);
     }
@@ -357,7 +406,8 @@ mod delete_zone {
         let expected = Json(json!({
             "zones": {
                 zone2_uuid.to_string(): {
-                    "name": zone2_name
+                    "name": zone2_name,
+                    "setpoint": 16.0
                 }
             }
         })).to_string();
