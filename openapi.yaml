@@ -197,6 +197,10 @@ components:
           uniqueItems: true
           maxLength: 24
           example: Living Room
+        setpoint:
+          type: number
+          format: double
+          example: 16.0
 
     Zones:
       type: object
@@ -206,8 +210,10 @@ components:
           additionalProperties:
             $ref: "#components/schemas/Zone"
           example:
-            "8a70d6f5-a877-4331-8f15-0f20e4d34c0f": { "name": Living Room }
-            "a805847b-0df2-44b8-9a49-b3aebd8eecb2": { "name": Bedroom }
+            "8a70d6f5-a877-4331-8f15-0f20e4d34c0f":
+              { "name": Living Room, "setpoint": 18.0 }
+            "a805847b-0df2-44b8-9a49-b3aebd8eecb2":
+              { "name": Bedroom, "setpoint": 22.5 }
 
     Device:
       type: object
@@ -218,6 +224,10 @@ components:
           uniqueItems: true
           maxLength: 24
           example: STRV
+        setpoint:
+          type: number
+          format: double
+          example: 16.0
         zone_uuid:
           type: string
           format: uuid
@@ -234,8 +244,9 @@ components:
           example:
             "56fd8e82-d260-46df-809f-662f070e9e1e":
               {
-                "name": STRV,
+                "name": STRV One,
+                "setpoint": 16.0,
                 "zone_uuid": "8a70d6f5-a877-4331-8f15-0f20e4d34c0f",
               }
             "4edf5992-8511-4587-a118-b8d53473da0c":
-              { "name": Main Light, "zone_uuid": null }
+              { "name": STRV Two, "setpoint": 23.5, "zone_uuid": null }
