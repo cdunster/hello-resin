@@ -1,6 +1,8 @@
+use rocket::http::Status;
 use rocket::response::status;
 use rocket::{Rocket, State};
-use rocket_contrib::{Json, UUID};
+use rocket_contrib::json::{Json, JsonValue};
+use rocket_contrib::uuid::Uuid as RocketUuid;
 use std::sync::Mutex;
 use uuid::Uuid;
 use zone::{Zone, ZoneCollection};
@@ -18,12 +20,14 @@ pub fn mount(rocket: Rocket, zones: ZoneCollection) -> Rocket {
                 patch_zone_from_uuid,
                 delete_zone_from_uuid
             ],
-        ).manage(ZoneCollectionState::new(zones))
+        )
+        .manage(ZoneCollectionState::new(zones))
 }
 
 #[get("/", format = "application/json")]
-fn get_zones(zones: State<ZoneCollectionState>) -> Json {
-    Json(json!(zones.inner()))
+fn get_zones(zones: State<ZoneCollectionState>) -> Json<ZoneCollection> {
+    let zones = zones.lock().unwrap();
+    Json(zones.clone())
 }
 
 #[post("/", format = "application/json", data = "<zone>")]
@@ -36,7 +40,7 @@ fn post_zones(zone: Json<Zone>, zones: State<ZoneCollectionState>) -> status::Cr
 }
 
 #[get("/<uuid>", format = "application/json")]
-fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
+fn get_zone_from_uuid(uuid: RocketUuid, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get(&uuid.into_inner()) {
         Some(Json(zone.clone()))
     } else {
@@ -44,7 +48,7 @@ fn get_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> Option<J
     }
 }
 
-fn patch_zone_with_json(zone: &mut Zone, patch_json: &Json) {
+fn patch_zone_with_json(zone: &mut Zone, patch_json: &JsonValue) {
     let patch_json = patch_json.as_object().unwrap();
 
     if patch_json.contains_key("name") {
@@ -61,7 +65,11 @@ fn patch_zone_with_json(zone: &mut Zone, patch_json: &Json) {
 }
 
 #[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
-fn patch_zone_from_uuid(uuid: UUID, patch_json: Json, zones: State<ZoneCollectionState>) -> Option<Json<Zone>> {
+fn patch_zone_from_uuid(
+    uuid: RocketUuid,
+    patch_json: Json<JsonValue>,
+    zones: State<ZoneCollectionState>,
+) -> Option<Json<Zone>> {
     if let Some(zone) = zones.lock().unwrap().get_mut(&uuid.into_inner()) {
         patch_zone_with_json(zone, &patch_json);
         Some(Json(zone.clone()))
@@ -71,9 +79,9 @@ fn patch_zone_from_uuid(uuid: UUID, patch_json: Json, zones: State<ZoneCollectio
 }
 
 #[delete("/<uuid>", format = "application/json")]
-fn delete_zone_from_uuid(uuid: UUID, zones: State<ZoneCollectionState>) -> status::NoContent {
+fn delete_zone_from_uuid(uuid: RocketUuid, zones: State<ZoneCollectionState>) -> Status {
     zones.lock().unwrap().remove(&uuid);
-    status::NoContent
+    Status::NoContent
 }
 
 #[cfg(test)]

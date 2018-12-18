@@ -1,16 +1,12 @@
 use device::{Device, DeviceCollection};
 use rocket::response::status;
 use rocket::{Rocket, State};
-use rocket_contrib::{Json, UUID};
+use rocket_contrib::json::{Json, JsonValue};
+use rocket_contrib::uuid::Uuid as RocketUuid;
 use std::sync::Mutex;
 use uuid::Uuid;
 
 type DeviceCollectionState = Mutex<DeviceCollection>;
-
-#[derive(FromForm)]
-struct DeviceQuery {
-    zone_uuid: UUID,
-}
 
 pub fn mount(rocket: Rocket, devices: DeviceCollection) -> Rocket {
     rocket
@@ -23,12 +19,13 @@ pub fn mount(rocket: Rocket, devices: DeviceCollection) -> Rocket {
                 patch_device_from_uuid,
                 post_device
             ],
-        ).manage(DeviceCollectionState::new(devices))
+        )
+        .manage(DeviceCollectionState::new(devices))
 }
 
 #[get("/", format = "application/json")]
-fn get_devices(devices: State<DeviceCollectionState>) -> Json {
-    Json(json!(devices.inner()))
+fn get_devices(devices: State<DeviceCollectionState>) -> JsonValue {
+    json!(devices.inner())
 }
 
 #[post("/", data = "<device>", format = "application/json")]
@@ -40,13 +37,13 @@ fn post_device(device: Json<Device>, devices: State<DeviceCollectionState>) -> s
     status::Created(format!("/devices/{}", uuid), Some(device))
 }
 
-#[get("/?<device_query>", format = "application/json")]
+#[get("/?<zone_uuid>", format = "application/json")]
 fn get_devices_with_query(
-    device_query: DeviceQuery,
+    zone_uuid: RocketUuid,
     devices: State<DeviceCollectionState>,
 ) -> Option<Json<DeviceCollection>> {
     let devices = devices.lock().unwrap();
-    let devices = devices.get_all_with_zone(device_query.zone_uuid.into_inner());
+    let devices = devices.get_all_with_zone(zone_uuid.into_inner());
     if let Some(devices) = devices {
         Some(Json(devices))
     } else {
@@ -55,7 +52,7 @@ fn get_devices_with_query(
 }
 
 #[get("/<uuid>", format = "application/json")]
-fn get_device_from_uuid(uuid: UUID, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
+fn get_device_from_uuid(uuid: RocketUuid, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
     if let Some(device) = devices.lock().unwrap().get(&uuid.into_inner()) {
         Some(Json(device.clone()))
     } else {
@@ -63,7 +60,7 @@ fn get_device_from_uuid(uuid: UUID, devices: State<DeviceCollectionState>) -> Op
     }
 }
 
-fn patch_device_with_json(device: &mut Device, patch_json: &Json) {
+fn patch_device_with_json(device: &mut Device, patch_json: &JsonValue) {
     let patch_json = patch_json.as_object().unwrap();
 
     if patch_json.contains_key("name") {
@@ -89,7 +86,11 @@ fn patch_device_with_json(device: &mut Device, patch_json: &Json) {
 }
 
 #[patch("/<uuid>", format = "application/json", data = "<patch_json>")]
-fn patch_device_from_uuid(uuid: UUID, patch_json: Json, devices: State<DeviceCollectionState>) -> Option<Json<Device>> {
+fn patch_device_from_uuid(
+    uuid: RocketUuid,
+    patch_json: Json<JsonValue>,
+    devices: State<DeviceCollectionState>,
+) -> Option<Json<Device>> {
     if let Some(device) = devices.lock().unwrap().get_mut(&uuid.into_inner()) {
         patch_device_with_json(device, &patch_json);
         Some(Json(device.clone()))

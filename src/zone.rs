@@ -21,7 +21,7 @@ impl Zone {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct ZoneCollection {
     zones: HashMap<Uuid, Zone>,
 }

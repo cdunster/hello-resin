@@ -1,8 +1,9 @@
 use super::*;
 use rocket::http::{ContentType, Status};
 use rocket::local::{Client, LocalResponse};
-use rocket_contrib::{Json, Value};
+use rocket_contrib::json::{Json, JsonValue};
 use serde_json::map::Values;
+use serde_json::Value;
 use uuid::Uuid;
 
 fn create_client_with_mounts(devices: DeviceCollection) -> Client {
@@ -38,7 +39,8 @@ mod get_devices {
 
         let expected = Json(json!({
             "devices": {}
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -72,7 +74,8 @@ mod get_devices {
                     "zone_uuid": null
                 }
             }
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -100,7 +103,8 @@ mod get_devices {
                     "zone_uuid": device2_zone
                 }
             }
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -164,7 +168,8 @@ mod get_devices {
                     "zone_uuid": device2_zone
                 }
             }
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 }
@@ -194,7 +199,8 @@ mod get_device {
             "name": device_name,
             "setpoint": 16.0,
             "zone_uuid": null
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -213,19 +219,21 @@ mod get_device {
         let body = get_device_return_response_body_string(&client, &device1_uuid.to_string());
 
         let expected = Json(json!({
-            "name": device1_name,
-            "setpoint": 16.0,
-            "zone_uuid": null
-            })).to_string();
+        "name": device1_name,
+        "setpoint": 16.0,
+        "zone_uuid": null
+        }))
+        .to_string();
         assert_eq!(expected, body);
 
         let body = get_device_return_response_body_string(&client, &device2_uuid.to_string());
 
         let expected = Json(json!({
-            "name": device2_name,
-            "setpoint": 16.0,
-            "zone_uuid": null
-            })).to_string();
+        "name": device2_name,
+        "setpoint": 16.0,
+        "zone_uuid": null
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -255,7 +263,8 @@ mod get_device {
             "name": device_name,
             "setpoint": 16.0,
             "zone_uuid": null
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
 
         let body = get_device_return_response_body_string(&client, &device_uuid.to_string());
@@ -264,7 +273,8 @@ mod get_device {
             "name": device_name,
             "setpoint": 16.0,
             "zone_uuid": null
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -273,7 +283,7 @@ mod get_device {
 mod patch_device {
     use super::*;
 
-    fn patch_device_return_response<'c>(client: &'c Client, uuid: Uuid, device_json: Json) -> LocalResponse<'c> {
+    fn patch_device_return_response<'c>(client: &'c Client, uuid: Uuid, device_json: JsonValue) -> LocalResponse<'c> {
         client
             .patch(format!("/devices/{}", uuid))
             .body(device_json.to_string())
@@ -295,7 +305,7 @@ mod patch_device {
 
         let patched_name = "New device name".to_string();
         let patched_zone_uuid = Uuid::parse_str("b098d5ca-1311-4145-80b2-0e9b2944efd3").unwrap();
-        let patch_json = Json(json!({ "name": patched_name, "zone_uuid": patched_zone_uuid }));
+        let patch_json = json!({ "name": patched_name, "zone_uuid": patched_zone_uuid });
         let mut response = patch_device_return_response(&client, device1_uuid, patch_json);
 
         let returned_device: Device = serde_json::from_str(&response.body_string().unwrap()).unwrap();
@@ -318,7 +328,7 @@ mod patch_device {
         let client = create_client_with_mounts(devices);
 
         let patched_name = "New device name".to_string();
-        let patch_json = Json(json!({ "name": patched_name }));
+        let patch_json = json!({ "name": patched_name });
         patch_device_return_response(&client, device1_uuid, patch_json);
 
         let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
@@ -337,7 +347,8 @@ mod patch_device {
                     "zone_uuid": null
                 }
             }
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -355,7 +366,7 @@ mod patch_device {
 
         let client = create_client_with_mounts(devices);
 
-        let patch_json = Json(json!({ "zone_uuid": null }));
+        let patch_json = json!({ "zone_uuid": null });
         patch_device_return_response(&client, device1_uuid, patch_json);
 
         let mut response = client.get("/devices").header(ContentType::JSON).dispatch();
@@ -374,7 +385,8 @@ mod patch_device {
                     "zone_uuid": "b098d5ca-1311-4145-80b2-0e9b2944efd3"
                 }
             }
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
@@ -392,7 +404,7 @@ mod patch_device {
         let client = create_client_with_mounts(devices);
 
         let patched_name = "New device name".to_string();
-        let patch_json = Json(json!({ "name": patched_name }));
+        let patch_json = json!({ "name": patched_name });
         let mut response = patch_device_return_response(&client, device1_uuid, patch_json);
 
         let returned_device: Device = serde_json::from_str(&response.body_string().unwrap()).unwrap();
@@ -415,7 +427,7 @@ mod patch_device {
         let client = create_client_with_mounts(devices);
 
         let patch_setpoint = 22.3;
-        let patch_json = Json(json!({ "setpoint": patch_setpoint }));
+        let patch_json = json!({ "setpoint": patch_setpoint });
         let body = patch_device_return_response(&client, device1_uuid, patch_json)
             .body_string()
             .unwrap();
@@ -424,7 +436,8 @@ mod patch_device {
             "name": device1_name,
             "setpoint": patch_setpoint,
             "zone_uuid": zone_uuid
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 }
@@ -484,7 +497,8 @@ mod post_device {
             "name": name,
             "setpoint": 16.0,
             "zone_uuid": null
-        })).to_string();
+        }))
+        .to_string();
         assert_eq!(expected, body);
     }
 
