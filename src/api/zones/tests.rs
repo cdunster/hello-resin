@@ -29,11 +29,11 @@ mod get_zones {
         let client = create_client_with_mounts(zones);
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
         let expected = json!({
             "zones": {}
-        })
-        .to_string();
+        });
         assert_eq!(expected, body);
     }
 
@@ -50,6 +50,7 @@ mod get_zones {
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
         let expected = json!({
             "zones": {
@@ -62,8 +63,7 @@ mod get_zones {
                     "setpoint": 16.0
                 }
             }
-        })
-        .to_string();
+        });
         assert_eq!(expected, body);
     }
 }
@@ -87,8 +87,9 @@ mod get_zone {
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": zone_name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": zone_name, "setpoint": 16.0 });
         assert_eq!(expected, body);
     }
 
@@ -104,13 +105,15 @@ mod get_zone {
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, &zone1_uuid.to_string());
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": zone1_name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": zone1_name, "setpoint": 16.0 });
         assert_eq!(expected, body);
 
         let body = get_zone_return_response_body_string(&client, &zone2_uuid.to_string());
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": zone2_name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": zone2_name, "setpoint": 16.0 });
         assert_eq!(expected, body);
     }
 
@@ -134,13 +137,15 @@ mod get_zone {
         let client = create_client_with_mounts(zones);
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": zone_name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": zone_name, "setpoint": 16.0 });
         assert_eq!(expected, body);
 
         let body = get_zone_return_response_body_string(&client, &zone_uuid.to_string());
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": zone_name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": zone_name, "setpoint": 16.0 });
         assert_eq!(expected, body);
     }
 
@@ -196,8 +201,9 @@ mod post_zone {
         let mut response = post_zone_return_response(&client, &zone);
         println!("{:?}", response);
         let body = response.body_string().unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({ "name": name, "setpoint": 16.0 }).to_string();
+        let expected = json!({ "name": name, "setpoint": 16.0 });
         assert_eq!(expected, body);
     }
 
@@ -287,7 +293,7 @@ mod patch_zone {
     }
 
     #[test]
-    fn updates_zone_collection() {
+    fn patch_name_updates_zone_collection() {
         let zone1_uuid = Uuid::parse_str("84fa1356-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
         let zone1_name = "Zone Name";
         let zone2_uuid = Uuid::parse_str("88f573e2-d5de-11e8-9f8b-f2801f1b9fd1").unwrap();
@@ -303,21 +309,10 @@ mod patch_zone {
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
+        let body: Value = serde_json::from_str(&body).unwrap();
 
-        let expected = json!({
-            "zones": {
-                zone1_uuid.to_string(): {
-                    "name": patched_name,
-                    "setpoint": 16.0
-                },
-                zone2_uuid.to_string(): {
-                    "name": zone2_name,
-                    "setpoint": 16.0
-                }
-            }
-        })
-        .to_string();
-        assert_eq!(expected, body);
+        assert_eq!(body["zones"][zone1_uuid.to_string()]["name"], patched_name);
+        assert_eq!(body["zones"][zone2_uuid.to_string()]["name"], zone2_name);
     }
 
     #[test]
@@ -333,12 +328,12 @@ mod patch_zone {
         let body = patch_zone_return_response(&client, zone_uuid, patch_json)
             .body_string()
             .unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
         let expected = json!({
                 "name": patched_name,
                 "setpoint": 16.0
-        })
-        .to_string();
+        });
         assert_eq!(expected, body);
     }
 
@@ -357,12 +352,12 @@ mod patch_zone {
         let body = patch_zone_return_response(&client, zone_uuid, patch_json)
             .body_string()
             .unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
         let expected = json!({
                 "name": zone_name,
                 "setpoint": patch_setpoint
-        })
-        .to_string();
+        });
         assert_eq!(expected, body);
     }
 }
@@ -408,6 +403,7 @@ mod delete_zone {
 
         let mut response = client.get("/zones").header(ContentType::JSON).dispatch();
         let body = response.body_string().unwrap();
+        let body = serde_json::from_str(&body).unwrap();
 
         let expected = json!({
             "zones": {
@@ -416,8 +412,7 @@ mod delete_zone {
                     "setpoint": 16.0
                 }
             }
-        })
-        .to_string();
+        });
         assert_eq!(expected, body);
     }
 
