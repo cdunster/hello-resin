@@ -21,7 +21,7 @@ ENV PATH=/root/.cargo/bin:$PATH
 # Install specific version of Rust.
 RUN curl -0 https://sh.rustup.rs -o rustup-init
 RUN chmod +x rustup-init
-RUN ./rustup-init -y --no-modify-path --default-toolchain nightly-2018-09-25
+RUN ./rustup-init -y --no-modify-path --default-toolchain nightly
 
 ################################################################################
 # Dependencies
